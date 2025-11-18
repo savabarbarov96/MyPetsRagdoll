@@ -12,19 +12,54 @@ import Analytics from "./components/Analytics";
 import { LocationBasedTheme } from "@/hooks/useTheme";
 import { Helmet } from 'react-helmet-async';
 import { LanguageProvider, useLanguage } from "@/hooks/useLanguage";
+import PerformanceOptimizer from "./components/PerformanceOptimizer";
+import { ImagePreloader, CRITICAL_IMAGES, BackgroundImagePreloader } from "./components/ImagePreloader";
+import { useCriticalImagePreloader } from "@/hooks/useImagePreloader";
 
 const AppContent = () => {
   const { t } = useLanguage();
+  const { isLoading } = useCriticalImagePreloader(CRITICAL_IMAGES);
+  
+  // Additional images to preload in background after critical images
+  const backgroundImages = [
+    '/featured-cat-1.jpg',
+    '/featured-cat-2.jpg',
+    '/model-cat-1.jpg',
+    '/model-cat-2.jpg',
+    '/model-cat-3.jpg'
+  ];
   
   return (
     <>
       <Toaster />
       <Sonner />
       <Analytics />
+      <PerformanceOptimizer />
+      
+      {/* Preload critical images with loading UI */}
+      <ImagePreloader 
+        criticalImages={CRITICAL_IMAGES} 
+        showProgress={isLoading}
+      />
+      
+      {/* Background preload non-critical images */}
+      <BackgroundImagePreloader images={backgroundImages} />
+      
       <Helmet>
         <title>{t('meta.title')}</title>
         <meta name="description" content={t('meta.description')} />
+        {/* Preload critical images via link tags for browsers that support it */}
+        {CRITICAL_IMAGES.map((src) => (
+          <link 
+            key={src} 
+            rel="preload" 
+            as="image" 
+            href={src}
+            fetchPriority="high"
+          />
+        ))}
       </Helmet>
+      
       <LocationBasedTheme>
         <Routes>
           <Route path="/" element={<Index />} />

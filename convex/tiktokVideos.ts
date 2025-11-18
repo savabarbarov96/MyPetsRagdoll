@@ -24,11 +24,15 @@ export const getActiveVideos = query({
 
 // Get videos for a specific cat
 export const getVideosByCat = query({
-  args: { catId: v.id("cats") },
+  args: { catId: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
+    // Return empty array if no catId provided
+    if (!args.catId) {
+      return [];
+    }
     return await ctx.db
       .query("tiktokVideos")
-      .withIndex("by_cat_active", (q) => q.eq("catId", args.catId).eq("isActive", true))
+      .withIndex("by_cat_active", (q) => q.eq("catId", args.catId!).eq("isActive", true))
       .collect();
   },
 });
@@ -75,9 +79,13 @@ export const getVideosForMainSection = query({
 
 // Get video by ID
 export const getVideoById = query({
-  args: { id: v.id("tiktokVideos") },
+  args: { id: v.optional(v.id("tiktokVideos")) },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    // Return null if no id provided
+    if (!args.id) {
+      return null;
+    }
+    return await ctx.db.get(args.id!);
   },
 });
 

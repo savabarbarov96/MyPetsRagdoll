@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, ExternalLink } from 'lucide-react';
-import { useTikTokVideosForMainSection } from '@/services/convexTikTokService';
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useLanguage } from '@/hooks/useLanguage';
 
 // Professional ragdoll cat images for TikTok thumbnails
 const RAGDOLL_TIKTOK_THUMBNAILS = [
-  'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=600&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=400&h=600&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=600&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1574231164645-d6f0e8553590?w=400&h=600&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1596854505728-4c8b33a0d0d8?w=400&h=600&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1581888227599-779811939961?w=400&h=600&fit=crop&auto=format&q=80'
+  '/src/assets/featured-cat-1.jpg',
+  '/src/assets/featured-cat-2.jpg',
+  '/src/assets/model-cat-1.jpg',
+  '/src/assets/model-cat-2.jpg',
+  '/src/assets/model-cat-3.jpg',
+  '/src/assets/9274d091-96de-4d71-abd1-fe6214ea8876.jpg'
 ];
 
 // Fallback static TikTok videos when no database content is available - REMOVED per user request
@@ -18,8 +19,38 @@ const FALLBACK_VIDEOS: any[] = [];
 
 const TikTokSection = () => {
   const { t } = useLanguage();
-  const videos = useTikTokVideosForMainSection(6);
+  const [shouldLoadVideos, setShouldLoadVideos] = useState(false);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
+
+  // Lazy load videos only when section is interacted with
+  const videos = useQuery(
+    api.tiktokVideos.getVideosForMainSection,
+    { limit: 6 }
+  );
+
+  // Enable loading when section comes into view or user interacts
+  const handleSectionVisible = () => {
+    setShouldLoadVideos(true);
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadVideos(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const section = document.getElementById('tiktok-section');
+    if (section) {
+      observer.observe(section);
+    }
+
+    return () => observer.disconnect();
+  }, []);
   
   // Use only database videos - no fallback videos
   const displayVideos = videos || [];
@@ -53,7 +84,12 @@ const TikTokSection = () => {
   }
 
   return (
-    <section className="bg-black py-16 px-4">
+    <section 
+      id="tiktok-section"
+      className="bg-black py-16 px-4"
+      onMouseEnter={handleSectionVisible}
+      onFocus={handleSectionVisible}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">

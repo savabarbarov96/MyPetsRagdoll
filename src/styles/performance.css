@@ -1,0 +1,135 @@
+/* Performance optimizations for image loading and galleries */
+
+/* Optimize image loading with hardware acceleration */
+img {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Lazy loading placeholder animation */
+.image-fade-in {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.image-fade-in.loaded {
+  opacity: 1;
+}
+
+/* Progressive Image Loading Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+}
+
+/* Image Blur-up effect */
+.blur-up {
+  filter: blur(20px);
+  transform: scale(1.05);
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.blur-up.loaded {
+  filter: blur(0);
+  transform: scale(1);
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Image lazy loading states */
+.image-loading {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.image-loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.image-error {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+/* Critical resource hints */
+.preload-critical {
+  content-visibility: auto;
+  contain-intrinsic-size: 400px 300px;
+}
+
+/* Gallery optimizations */
+.gallery-grid {
+  contain: layout style paint;
+}
+
+.gallery-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px 400px;
+}
+
+/* Reduce layout shifts */
+.aspect-ratio-container {
+  position: relative;
+  width: 100%;
+}
+
+.aspect-ratio-container::before {
+  content: '';
+  display: block;
+  padding-top: 75%; /* 4:3 aspect ratio */
+}
+
+.aspect-ratio-container > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Optimize scrolling performance */
+.scroll-container {
+  contain: layout style paint;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Reduce paint operations */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Critical CSS for above-the-fold content */
+.hero-content {
+  contain: layout style;
+  will-change: transform, opacity;
+}
+
+/* Defer non-critical animations */
+@media (prefers-reduced-motion: reduce) {
+  .image-fade-in,
+  .transform-gpu {
+    transition: none !important;
+    animation: none !important;
+  }
+}

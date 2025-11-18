@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -6,22 +6,35 @@ import { Image, Award, Filter } from 'lucide-react';
 import GalleryCard from './GalleryCard';
 import GalleryModal from './GalleryModal';
 import { 
-  usePublishedGalleryItems, 
   useGalleryCategoriesWithCounts, 
   GalleryItem, 
   GalleryCategory 
 } from '@/services/convexGalleryService';
+import { useLazyGalleryData } from '@/hooks/useOptimizedQueries';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
+import { useIntersectionPreloader } from './ImagePreloader';
 
 const GallerySection = () => {
   const [selectedCategory, setSelectedCategory] = useState<GalleryCategory | "all">("all");
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAllItems, setShowAllItems] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
+  const galleryRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useMobileDetection();
-  const galleryItems = usePublishedGalleryItems(selectedCategory);
+  const galleryItems = useLazyGalleryData(selectedCategory, hasUserInteracted);
   const categories = useGalleryCategoriesWithCounts();
+
+  // Preload images when gallery section comes into view
+  const imagesToPreload = useMemo(() => {
+    return galleryItems?.slice(0, 12).map(item => item.imageUrl) || [];
+  }, [galleryItems]);
+
+  useIntersectionPreloader(galleryRef, imagesToPreload, { 
+    threshold: 0.1,
+    rootMargin: '100px' 
+  });
 
   // Filter items based on display limit
   const displayedItems = useMemo(() => {
@@ -49,6 +62,14 @@ const GallerySection = () => {
   const handleCategoryChange = (category: GalleryCategory | "all") => {
     setSelectedCategory(category);
     setShowAllItems(false); // Reset show all when changing categories
+    setHasUserInteracted(true); // Enable data loading on interaction
+  };
+
+  // Enable data loading when section comes into view
+  const handleSectionVisible = () => {
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
   };
 
   if (!categories || categories.length === 0) {
@@ -59,7 +80,12 @@ const GallerySection = () => {
   const hasMoreItems = totalItems > displayedItems.length;
 
   return (
-    <section className="py-4 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-primary/5 to-muted/30 relative overflow-hidden">
+    <section 
+      ref={galleryRef}
+      className="py-4 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background via-primary/5 to-muted/30 relative overflow-hidden"
+      onMouseEnter={handleSectionVisible}
+      onFocus={handleSectionVisible}
+    >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl"></div>

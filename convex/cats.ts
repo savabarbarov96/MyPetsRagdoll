@@ -21,30 +21,66 @@ export const getDisplayedCats = query({
 
 // Get cat by ID
 export const getCatById = query({
-  args: { id: v.id("cats") },
+  args: { id: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    // Return null if no id provided
+    if (!args.id) {
+      return null;
+    }
+    return await ctx.db.get(args.id!);
   },
 });
 
-// Search cats by various criteria
+// Optimized search cats by various criteria using indexes
 export const searchCats = query({
   args: {
     searchTerm: v.optional(v.string()),
     gender: v.optional(v.union(v.literal("male"), v.literal("female"))),
     isDisplayed: v.optional(v.boolean()),
+    category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let cats = await ctx.db.query("cats").collect();
-
-    if (args.gender) {
-      cats = cats.filter(cat => cat.gender === args.gender);
+    const limit = args.limit || 100; // Default limit to prevent large responses
+    
+    // Use indexed queries when possible for better performance
+    let cats;
+    
+    if (args.gender && args.isDisplayed !== undefined) {
+      // Use compound index if available, otherwise filter
+      if (args.isDisplayed) {
+        cats = await ctx.db
+          .query("cats")
+          .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
+          .filter((q) => q.eq(q.field("gender"), args.gender!))
+          .take(limit);
+      } else {
+        cats = await ctx.db
+          .query("cats")
+          .withIndex("by_gender", (q) => q.eq("gender", args.gender!))
+          .filter((q) => q.eq(q.field("isDisplayed"), false))
+          .take(limit);
+      }
+    } else if (args.gender) {
+      cats = await ctx.db
+        .query("cats")
+        .withIndex("by_gender", (q) => q.eq("gender", args.gender!))
+        .take(limit);
+    } else if (args.isDisplayed !== undefined) {
+      cats = await ctx.db
+        .query("cats")
+        .withIndex("by_displayed", (q) => q.eq("isDisplayed", args.isDisplayed!))
+        .take(limit);
+    } else if (args.category && args.category !== "all") {
+      cats = await ctx.db
+        .query("cats")
+        .withIndex("by_category", (q) => q.eq("category", args.category))
+        .take(limit);
+    } else {
+      cats = await ctx.db.query("cats").take(limit);
     }
 
-    if (args.isDisplayed !== undefined) {
-      cats = cats.filter(cat => cat.isDisplayed === args.isDisplayed);
-    }
-
+    // Apply search term filter if provided (this is done post-query for text search)
     if (args.searchTerm) {
       const term = args.searchTerm.toLowerCase();
       cats = cats.filter(cat => 
@@ -217,25 +253,31 @@ export const getRecentCats = query({
   },
 });
 
-// Get cat statistics
+// Optimized cat statistics using indexed queries
 export const getCatStatistics = query({
   handler: async (ctx) => {
-    const allCats = await ctx.db.query("cats").collect();
-    const displayedCats = allCats.filter(cat => cat.isDisplayed);
-    const males = allCats.filter(cat => cat.gender === "male");
-    const females = allCats.filter(cat => cat.gender === "female");
+    // Use Promise.all to run queries in parallel for better performance
+    const [allCatsCount, displayedCats, males, females] = await Promise.all([
+      ctx.db.query("cats").collect().then(cats => cats.length),
+      ctx.db.query("cats").withIndex("by_displayed", (q) => q.eq("isDisplayed", true)).collect(),
+      ctx.db.query("cats").withIndex("by_gender", (q) => q.eq("gender", "male")).collect(),
+      ctx.db.query("cats").withIndex("by_gender", (q) => q.eq("gender", "female")).collect()
+    ]);
+
+    // Calculate average age only from displayed cats to avoid fetching all cat data
+    const averageAge = displayedCats.length > 0 ? 
+      displayedCats.reduce((sum, cat) => {
+        const age = parseFloat(cat.age) || 0;
+        return sum + age;
+      }, 0) / displayedCats.length : 0;
 
     return {
-      total: allCats.length,
+      total: allCatsCount,
       displayed: displayedCats.length,
-      hidden: allCats.length - displayedCats.length,
+      hidden: allCatsCount - displayedCats.length,
       males: males.length,
       females: females.length,
-      averageAge: allCats.length > 0 ? 
-        allCats.reduce((sum, cat) => {
-          const age = parseFloat(cat.age) || 0;
-          return sum + age;
-        }, 0) / allCats.length : 0
+      averageAge: Math.round(averageAge * 100) / 100 // Round to 2 decimal places
     };
   },
 });
@@ -255,39 +297,73 @@ export const getCatsByCategory = query({
   },
 });
 
-// Get displayed cats by category for gallery filtering (age-based)
+// Optimized displayed cats by category using compound index
 export const getDisplayedCatsByCategory = query({
-  args: { category: v.union(v.literal("kitten"), v.literal("adult"), v.literal("all")) },
+  args: { 
+    category: v.union(v.literal("kitten"), v.literal("adult"), v.literal("all")),
+    limit: v.optional(v.number())
+  },
   handler: async (ctx, args) => {
+    const limit = args.limit || 50; // Default limit for performance
+    
+    if (args.category === "all") {
+      return await ctx.db
+        .query("cats")
+        .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
+        .take(limit);
+    }
+    
+    // Try to use compound index first for better performance
+    const catsFromIndex = await ctx.db
+      .query("cats")
+      .withIndex("by_category_displayed", (q) => 
+        q.eq("category", args.category).eq("isDisplayed", true)
+      )
+      .take(limit);
+    
+    // If we have enough results from the index, return them
+    if (catsFromIndex.length >= Math.min(limit, 10)) {
+      return catsFromIndex;
+    }
+    
+    // Fallback to age-based calculation for cats without category set
     const allDisplayedCats = await ctx.db
       .query("cats")
       .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
-      .collect();
+      .take(limit * 2); // Get more to account for filtering
     
-    if (args.category === "all") {
-      return allDisplayedCats;
-    }
-    
-    // Calculate age-based category for each cat
     const currentDate = new Date();
     
-    return allDisplayedCats.filter(cat => {
-      if (!cat.birthDate) {
-        // If no birth date, fallback to manual category if available
-        return cat.category === args.category;
+    const filteredCats = allDisplayedCats.filter(cat => {
+      // First check if category is explicitly set
+      if (cat.category === args.category) {
+        return true;
       }
       
-      const birthDate = new Date(cat.birthDate);
-      const ageInYears = (currentDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-      
-      if (args.category === "kitten") {
-        return ageInYears < 1;
-      } else if (args.category === "adult") {
-        return ageInYears >= 1;
+      // Fallback to age-based calculation
+      if (cat.birthDate) {
+        const birthDate = new Date(cat.birthDate);
+        const ageInYears = (currentDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        
+        if (args.category === "kitten") {
+          return ageInYears < 1 && !cat.category; // Only if category not set
+        } else if (args.category === "adult") {
+          return ageInYears >= 1 && !cat.category; // Only if category not set
+        }
       }
       
       return false;
     });
+    
+    // Combine results and remove duplicates
+    const combinedResults = [...catsFromIndex];
+    filteredCats.forEach(cat => {
+      if (!combinedResults.some(existing => existing._id === cat._id)) {
+        combinedResults.push(cat);
+      }
+    });
+    
+    return combinedResults.slice(0, limit);
   },
 });
 
@@ -329,21 +405,101 @@ export const getDisplayedCatsByGenderAndAge = query({
   },
 });
 
-// Bulk update category for existing cats
+// Bulk update category for existing cats (optimized)
 export const bulkUpdateCategory = mutation({
   args: {
     catIds: v.array(v.id("cats")),
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
   },
   handler: async (ctx, args) => {
-    const results = [];
+    // Use Promise.all for parallel updates
+    const updatePromises = args.catIds.map(catId => 
+      ctx.db.patch(catId, { category: args.category })
+    );
     
-    for (const catId of args.catIds) {
-      await ctx.db.patch(catId, { category: args.category });
-      const updatedCat = await ctx.db.get(catId);
-      results.push(updatedCat);
+    await Promise.all(updatePromises);
+    
+    // Fetch updated cats in parallel
+    const fetchPromises = args.catIds.map(catId => ctx.db.get(catId));
+    const results = await Promise.all(fetchPromises);
+    
+    return results.filter(cat => cat !== null);
+  },
+});
+
+// Paginated cats query for better performance on large datasets
+export const getPaginatedCats = query({
+  args: {
+    paginationOpts: v.object({
+      numItems: v.number(),
+      cursor: v.union(v.string(), v.null())
+    }),
+    filters: v.optional(v.object({
+      isDisplayed: v.optional(v.boolean()),
+      gender: v.optional(v.union(v.literal("male"), v.literal("female"))),
+      category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all")))
+    }))
+  },
+  handler: async (ctx, args) => {
+    // Apply filters using indexes when possible
+    if (args.filters?.isDisplayed !== undefined) {
+      return await ctx.db
+        .query("cats")
+        .withIndex("by_displayed", (q) => 
+          q.eq("isDisplayed", args.filters!.isDisplayed!)
+        )
+        .paginate(args.paginationOpts);
+    } else if (args.filters?.gender) {
+      return await ctx.db
+        .query("cats")
+        .withIndex("by_gender", (q) => 
+          q.eq("gender", args.filters!.gender!)
+        )
+        .paginate(args.paginationOpts);
+    } else if (args.filters?.category && args.filters.category !== "all") {
+      return await ctx.db
+        .query("cats")
+        .withIndex("by_category", (q) => 
+          q.eq("category", args.filters!.category!)
+        )
+        .paginate(args.paginationOpts);
     }
     
-    return results;
+    return await ctx.db.query("cats").paginate(args.paginationOpts);
+  },
+});
+
+// Get cats with minimal data for performance-critical lists
+export const getCatsMinimal = query({
+  args: {
+    isDisplayed: v.optional(v.boolean()),
+    limit: v.optional(v.number())
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 20;
+    
+    let cats;
+    
+    if (args.isDisplayed !== undefined) {
+      cats = await ctx.db
+        .query("cats")
+        .withIndex("by_displayed", (q) => 
+          q.eq("isDisplayed", args.isDisplayed!)
+        )
+        .take(limit);
+    } else {
+      cats = await ctx.db.query("cats").take(limit);
+    }
+    
+    // Return only essential fields for performance
+    return cats.map(cat => ({
+      _id: cat._id,
+      name: cat.name,
+      subtitle: cat.subtitle,
+      image: cat.image,
+      gender: cat.gender,
+      isDisplayed: cat.isDisplayed,
+      category: cat.category
+    }));
   },
 }); 
