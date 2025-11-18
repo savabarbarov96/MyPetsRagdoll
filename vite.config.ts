@@ -23,9 +23,9 @@ export default defineConfig(({ mode }) => ({
   experimental: {
     renderBuiltUrl(filename: string, { type }: { type: 'public' | 'asset' }) {
       if (mode === 'production' && type === 'asset') {
-        // Use a CDN for static assets in production
-        const cdnUrl = process.env.VITE_CDN_URL || '';
-        return cdnUrl ? `${cdnUrl}/assets/${filename}` : `/assets/${filename}`;
+        const cdnUrl = (process.env.VITE_CDN_URL || '').replace(/\/$/, '');
+        const assetPath = filename.startsWith('/') ? filename : `/${filename}`;
+        return cdnUrl ? `${cdnUrl}${assetPath}` : assetPath;
       }
       return filename;
     },
