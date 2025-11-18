@@ -14,7 +14,7 @@ export const useActiveTikTokVideos = () => {
 export const useTikTokVideosByCat = (catId: Id<"cats"> | string | undefined) => {
   // Skip the query if catId is a fallback ID (string) or undefined
   const isValidConvexId = catId && typeof catId === 'string' && !catId.startsWith('fallback-');
-  return useQuery(api.tiktokVideos.getVideosByCat, isValidConvexId ? { catId: catId as Id<"cats"> } : "skip");
+  return useQuery(api.tiktokVideos.getVideosByCat, isValidConvexId ? { catId: catId as Id<"cats"> } : {});
 };
 
 export const useGlobalTikTokVideos = () => {
@@ -26,7 +26,7 @@ export const useTikTokVideosForMainSection = (limit?: number) => {
 };
 
 export const useTikTokVideoById = (id: Id<"tiktokVideos"> | undefined) => {
-  return useQuery(api.tiktokVideos.getVideoById, id ? { id } : "skip");
+  return useQuery(api.tiktokVideos.getVideoById, id ? { id } : {});
 };
 
 export const useTikTokVideoStatistics = () => {

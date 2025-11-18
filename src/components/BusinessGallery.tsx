@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Award, FileText, Camera, Trophy, Badge, Star, ExternalLink, Heart, Share2, Target } from "lucide-react";
+import ProgressiveImage from "@/components/ui/ProgressiveImage";
 import { Id } from "../../convex/_generated/dataModel";
 
 type BusinessGalleryItem = {
@@ -228,20 +229,12 @@ export default function BusinessGallery() {
                   <div className="relative h-full rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/20 backdrop-blur-sm">
                     {/* Image */}
                     <div className="relative h-2/3 overflow-hidden flex items-center justify-center bg-muted">
-                      <img
+                      <ProgressiveImage
                         src={item.imageUrl}
                         alt={item.title}
                         className="max-w-full max-h-full object-contain transition-transform duration-700"
-                        onError={(e) => {
-                          // Fallback for missing images based on category
-                          const fallbackImages = {
-                            award: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=600&fit=crop&auto=format',
-                            trophy: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=400&h=600&fit=crop&auto=format',
-                            certificate: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400&h=600&fit=crop&auto=format',
-                            photo: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=400&h=600&fit=crop&auto=format',
-                            achievement: 'https://images.unsplash.com/photo-1594736797933-d0301ba8807d?w=400&h=600&fit=crop&auto=format'
-                          };
-                          e.currentTarget.src = fallbackImages[item.category] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDQwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMDAgMjUwSDIyMFYzNTBIMjAwVjI1MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+                        onError={() => {
+                          // Fallback handled internally by ProgressiveImage component
                         }}
                       />
                     

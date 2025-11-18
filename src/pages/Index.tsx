@@ -14,10 +14,11 @@ import SocialSidebar from "@/components/SocialSidebar";
 
 import CatCarePopup from "@/components/CatCarePopup";
 import BackgroundAnimations from "@/components/BackgroundAnimations";
+import { useOptimizedQueries } from "@/hooks/useOptimizedQueries";
 
 const Index = () => {
-
   const [showCatCarePopup, setShowCatCarePopup] = useState(false);
+  const { isInitialLoadComplete, enableSecondaryQueries } = useOptimizedQueries();
 
   useEffect(() => {
     // Show cat care popup after 3 seconds
@@ -27,6 +28,37 @@ const Index = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Enable secondary queries when user scrolls or interacts
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        enableSecondaryQueries();
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    const handleUserInteraction = () => {
+      enableSecondaryQueries();
+      ['click', 'touchstart', 'keydown'].forEach(event => {
+        window.removeEventListener(event, handleUserInteraction);
+      });
+    };
+
+    if (isInitialLoadComplete) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      ['click', 'touchstart', 'keydown'].forEach(event => {
+        window.addEventListener(event, handleUserInteraction, { passive: true });
+      });
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      ['click', 'touchstart', 'keydown'].forEach(event => {
+        window.removeEventListener(event, handleUserInteraction);
+      });
+    };
+  }, [isInitialLoadComplete, enableSecondaryQueries]);
 
   return (
     <>

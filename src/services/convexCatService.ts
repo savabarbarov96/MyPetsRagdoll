@@ -12,7 +12,7 @@ export const useDisplayedCats = () => {
 };
 
 export const useCatById = (id: Id<"cats"> | undefined) => {
-  return useQuery(api.cats.getCatById, id ? { id } : "skip");
+  return useQuery(api.cats.getCatById, id ? { id } : {});
 };
 
 export const useSearchCats = (searchTerm?: string, gender?: 'male' | 'female', isDisplayed?: boolean) => {
@@ -79,16 +79,16 @@ export const usePedigreeConnections = () => {
 };
 
 export const useParents = (catId: Id<"cats"> | undefined) => {
-  return useQuery(api.pedigree.getParents, catId ? { catId } : "skip");
+  return useQuery(api.pedigree.getParents, catId ? { catId } : {});
 };
 
 export const useChildren = (catId: Id<"cats"> | undefined) => {
-  return useQuery(api.pedigree.getChildren, catId ? { catId } : "skip");
+  return useQuery(api.pedigree.getChildren, catId ? { catId } : {});
 };
 
 export const useFamilyTree = (rootCatId: Id<"cats"> | undefined, maxGenerations?: number) => {
   return useQuery(api.pedigree.generateFamilyTree, 
-    rootCatId ? { rootCatId, maxGenerations } : "skip"
+    rootCatId ? { rootCatId, maxGenerations } : null
   );
 };
 
@@ -97,7 +97,7 @@ export const useSavedPedigreeTrees = () => {
 };
 
 export const usePedigreeTree = (treeId: Id<"pedigreeTrees"> | undefined) => {
-  return useQuery(api.pedigree.getPedigreeTree, treeId ? { treeId } : "skip");
+  return useQuery(api.pedigree.getPedigreeTree, treeId ? { treeId } : {});
 };
 
 export const useBreedingStatistics = () => {
@@ -135,7 +135,7 @@ export const useLogout = () => {
 };
 
 export const useValidateSession = (sessionId: string | undefined) => {
-  return useQuery(api.auth.validateSession, sessionId ? { sessionId } : "skip");
+  return useQuery(api.auth.validateSession, sessionId ? { sessionId } : {});
 };
 
 export const useExtendSession = () => {

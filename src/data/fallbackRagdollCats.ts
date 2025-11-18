@@ -1,14 +1,14 @@
 import { CatData } from '@/services/convexCatService';
 
-// High-quality ragdoll cat images from reliable sources
+// High-quality ragdoll cat images from local assets
 const RAGDOLL_IMAGE_URLS = [
-  // Professional ragdoll cat photos - reliable placeholder service
-  'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=600&h=400&fit=crop&auto=format',
-  'https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=600&h=400&fit=crop&auto=format',
-  'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&h=400&fit=crop&auto=format',
-  'https://images.unsplash.com/photo-1574231164645-d6f0e8553590?w=600&h=400&fit=crop&auto=format',
-  'https://images.unsplash.com/photo-1596854505728-4c8b33a0d0d8?w=600&h=400&fit=crop&auto=format',
-  'https://images.unsplash.com/photo-1581888227599-779811939961?w=600&h=400&fit=crop&auto=format'
+  // Professional ragdoll cat photos - local optimized assets
+  '/src/assets/featured-cat-1.jpg',
+  '/src/assets/featured-cat-2.jpg',
+  '/src/assets/model-cat-1.jpg',
+  '/src/assets/model-cat-2.jpg',
+  '/src/assets/model-cat-3.jpg',
+  '/src/assets/66971fa7-cedb-4c2f-8201-1eafd603c1fc.jpg'
 ];
 
 // Fallback to local assets if external images fail

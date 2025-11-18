@@ -41,11 +41,15 @@ export const getConnectionsByChild = query({
 
 // Get parents of a specific cat
 export const getParents = query({
-  args: { catId: v.id("cats") },
+  args: { catId: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
+    // Return empty result if no catId provided
+    if (!args.catId) {
+      return { mother: null, father: null };
+    }
     const connections = await ctx.db
       .query("pedigreeConnections")
-      .withIndex("by_child", (q) => q.eq("childId", args.catId))
+      .withIndex("by_child", (q) => q.eq("childId", args.catId!))
       .collect();
 
     let mother = null;
@@ -66,11 +70,15 @@ export const getParents = query({
 
 // Get children of a specific cat
 export const getChildren = query({
-  args: { catId: v.id("cats") },
+  args: { catId: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
+    // Return empty array if no catId provided
+    if (!args.catId) {
+      return [];
+    }
     const connections = await ctx.db
       .query("pedigreeConnections")
-      .withIndex("by_parent", (q) => q.eq("parentId", args.catId))
+      .withIndex("by_parent", (q) => q.eq("parentId", args.catId!))
       .collect();
 
     const children = [];
@@ -179,12 +187,24 @@ export const removeConnectionsByRelationship = mutation({
 // Generate a complete family tree for a cat
 export const generateFamilyTree = query({
   args: { 
-    rootCatId: v.id("cats"),
+    rootCatId: v.optional(v.id("cats")),
     maxGenerations: v.optional(v.number())
   },
   handler: async (ctx, args) => {
+    // Return empty tree if no rootCatId provided
+    if (!args.rootCatId) {
+      return {
+        id: "empty_tree",
+        rootCatId: null,
+        nodes: [],
+        connections: [],
+        name: "Empty Tree",
+        description: "No root cat specified",
+        generationCount: 0,
+      };
+    }
     const maxGen = args.maxGenerations || 5;
-    const rootCat = await ctx.db.get(args.rootCatId);
+    const rootCat = await ctx.db.get(args.rootCatId!);
     
     if (!rootCat) {
       throw new Error("Root cat not found");
@@ -236,7 +256,7 @@ export const generateFamilyTree = query({
       }
     };
 
-    await addCatToTree(args.rootCatId, 0, 0, 0);
+    await addCatToTree(args.rootCatId!, 0, 0, 0);
 
     // Get relevant connections
     const relevantConnections = await ctx.db.query("pedigreeConnections").collect();
@@ -245,8 +265,8 @@ export const generateFamilyTree = query({
     );
 
     return {
-      id: `tree_${args.rootCatId}`,
-      rootCatId: args.rootCatId,
+      id: `tree_${args.rootCatId!}`,
+      rootCatId: args.rootCatId!,
       nodes,
       connections: treeConnections,
       name: `${rootCat.name} Pedigree`,
@@ -313,9 +333,13 @@ export const getSavedPedigreeTrees = query({
 
 // Get a specific saved pedigree tree
 export const getPedigreeTree = query({
-  args: { treeId: v.id("pedigreeTrees") },
+  args: { treeId: v.optional(v.id("pedigreeTrees")) },
   handler: async (ctx, args) => {
-    const tree = await ctx.db.get(args.treeId);
+    // Return null if no treeId provided
+    if (!args.treeId) {
+      return null;
+    }
+    const tree = await ctx.db.get(args.treeId!);
     if (!tree) return null;
 
     const rootCat = await ctx.db.get(tree.rootCatId);

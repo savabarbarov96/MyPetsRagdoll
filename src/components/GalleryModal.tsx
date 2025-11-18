@@ -33,6 +33,8 @@ const GalleryModal = ({ item, isOpen, onClose }: GalleryModalProps) => {
               src={item.imageUrl}
               alt={item.title}
               className="max-w-full max-h-full object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 

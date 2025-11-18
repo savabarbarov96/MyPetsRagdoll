@@ -23,16 +23,37 @@ export const getPublishedAnnouncements = query({
   },
 });
 
-// Get latest published announcements with limit
+// Get latest published announcements with limit and optional fields
 export const getLatestAnnouncements = query({
-  args: { limit: v.optional(v.number()) },
+  args: { 
+    limit: v.optional(v.number()),
+    includeContent: v.optional(v.boolean())
+  },
   handler: async (ctx, args) => {
     const limit = args.limit || 3;
-    return await ctx.db
+    const includeContent = args.includeContent ?? true;
+    
+    const announcements = await ctx.db
       .query("announcements")
       .withIndex("by_published", (q) => q.eq("isPublished", true))
       .order("desc")
       .take(limit);
+    
+    // For performance, optionally exclude content field for list views
+    if (!includeContent) {
+      return announcements.map(announcement => ({
+        _id: announcement._id,
+        title: announcement.title,
+        featuredImage: announcement.featuredImage,
+        publishedAt: announcement.publishedAt,
+        slug: announcement.slug,
+        metaDescription: announcement.metaDescription,
+        updatedAt: announcement.updatedAt,
+        sortOrder: announcement.sortOrder
+      }));
+    }
+    
+    return announcements;
   },
 });
 
@@ -190,15 +211,80 @@ export const toggleAnnouncementPublication = mutation({
   },
 });
 
-// Update sort order for multiple announcements
+// Update sort order for multiple announcements (optimized with batching)
 export const updateSortOrder = mutation({
   args: { updates: v.array(v.object({ id: v.id("announcements"), sortOrder: v.number() })) },
   handler: async (ctx, args) => {
+    const now = Date.now();
+    
+    // Batch updates for better performance
     const promises = args.updates.map(({ id, sortOrder }) =>
-      ctx.db.patch(id, { sortOrder, updatedAt: Date.now() })
+      ctx.db.patch(id, { sortOrder, updatedAt: now })
     );
     
     return await Promise.all(promises);
+  },
+});
+
+// Paginated announcements query for admin panel
+export const getPaginatedAnnouncements = query({
+  args: {
+    paginationOpts: v.object({
+      numItems: v.number(),
+      cursor: v.union(v.string(), v.null())
+    }),
+    publishedOnly: v.optional(v.boolean())
+  },
+  handler: async (ctx, args) => {
+    if (args.publishedOnly) {
+      return await ctx.db
+        .query("announcements")
+        .withIndex("by_published", (q) => q.eq("isPublished", true))
+        .paginate(args.paginationOpts);
+    } else {
+      return await ctx.db
+        .query("announcements")
+        .withIndex("by_sort_order", (q) => q.gt("sortOrder", -1))
+        .paginate(args.paginationOpts);
+    }
+  },
+});
+
+// Get announcement summaries (for performance-critical list views)
+export const getAnnouncementSummaries = query({
+  args: {
+    limit: v.optional(v.number()),
+    publishedOnly: v.optional(v.boolean())
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    
+    let announcements;
+    
+    if (args.publishedOnly) {
+      announcements = await ctx.db
+        .query("announcements")
+        .withIndex("by_published", (q) => q.eq("isPublished", true))
+        .order("desc")
+        .take(limit);
+    } else {
+      announcements = await ctx.db
+        .query("announcements")
+        .order("desc")
+        .take(limit);
+    }
+    
+    // Return minimal data for list performance
+    return announcements.map(announcement => ({
+      _id: announcement._id,
+      title: announcement.title,
+      featuredImage: announcement.featuredImage,
+      isPublished: announcement.isPublished,
+      publishedAt: announcement.publishedAt,
+      slug: announcement.slug,
+      metaDescription: announcement.metaDescription,
+      sortOrder: announcement.sortOrder
+    }));
   },
 });
 

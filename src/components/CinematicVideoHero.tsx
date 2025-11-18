@@ -117,6 +117,11 @@ const CinematicVideoHero = () => {
             loop={videoSettings.shouldLoop}
             muted={videoSettings.shouldMute}
             playsInline
+            preload="auto"
+            poster={activeHeroVideo?.thumbnailSrc}
+            crossOrigin="anonymous"
+            disablePictureInPicture
+            disableRemotePlayback
             className={`
               w-full h-full transition-all duration-700 ease-out
               ${isPortraitVideo 
@@ -146,7 +151,14 @@ const CinematicVideoHero = () => {
             onLoadedData={() => setIsVideoLoaded(true)}
             onError={() => setVideoError(true)}
           >
-            <source src={videoError ? ragdollVideo : videoSource} type="video/mp4" />
+            {/* Multiple source formats for better browser support and compression */}
+            {!videoError && videoSource.includes('.mp4') && (
+              <source 
+                src={videoSource.replace('.mp4', '.webm')} 
+                type="video/webm; codecs=vp8,vorbis" 
+              />
+            )}
+            <source src={videoError ? ragdollVideo : videoSource} type="video/mp4; codecs=avc1.42E01E,mp4a.40.2" />
             {/* Fallback source */}
             <source src={ragdollVideo} type="video/mp4" />
           </video>

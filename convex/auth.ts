@@ -48,11 +48,15 @@ export const login = mutation({
 
 // Validate session
 export const validateSession = query({
-  args: { sessionId: v.string() },
+  args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    // Return invalid if no sessionId provided
+    if (!args.sessionId) {
+      return { isValid: false, reason: "No session ID provided" };
+    }
     const session = await ctx.db
       .query("adminSessions")
-      .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId!))
       .first();
 
     if (!session) {

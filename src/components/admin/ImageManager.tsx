@@ -184,6 +184,8 @@ const ImageManager = ({
                 src={image}
                 alt={`Image ${index + 1}`}
                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                loading="lazy"
+                decoding="async"
                 onClick={() => openGallery(index)}
               />
               
