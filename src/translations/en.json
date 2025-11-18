@@ -1,122 +1,356 @@
 {
   "meta": {
-    "title": "Purebred Ragdoll Cats",
-    "description": "Purebred Ragdoll cats from BleuRoi Ragdoll Cattery. Beauty, character and health in one!"
+    "title": "Ragdoll Kittens for Sale | TICA Registered Breeder | BleuRoi Bulgaria",
+    "description": "Premium pedigree Ragdoll kittens for sale from BleuRoi Cattery Bulgaria. TICA & FIFe registered breeder offering healthy, blue-eyed Ragdoll kittens across Europe. Reserve your kitten today!",
+    "keywords": "ragdoll kittens for sale, pedigree ragdoll kittens, ragdoll breeder, ragdoll cattery, ragdoll kittens bulgaria, ragdoll kittens europe, blue-eyed ragdoll cats, TICA registered breeder, healthy ragdoll kittens, buy ragdoll kitten"
   },
   "navigation": {
     "home": "Home",
-    "models": "Models",
+    "models": "Our Cats",
     "males": "Males",
     "females": "Females",
-    "kittens": "Kittens",
+    "kittens": "Available Kittens",
+    "about": "About Us",
     "news": "News",
     "tiktok": "TikTok",
-    "contact": "Contact"
+    "contact": "Contact Us"
   },
   "hero": {
     "mainTitle": "Ragdoll",
-    "subtitle": "cats",
-    "ctaButton": "Click to Contact",
-    "flipWords": ["Purebred", "Gentle", "Beautiful"]
+    "subtitle": "Kittens",
+    "ctaButton": "Reserve Your Kitten",
+    "flipWords": ["Pedigree", "Gentle", "Beautiful", "Blue-Eyed", "Affectionate"],
+    "headline": "Premium Ragdoll Kittens for Sale from TICA Registered Breeder",
+    "subheadline": "Discover healthy, pedigree Ragdoll kittens with exceptional temperament and champion bloodlines",
+    "trustBadge": "Licensed Bulgarian Breeder | TICA & FIFe Registered | License 47090/2024"
+  },
+  "about": {
+    "hero": {
+      "title": "About BleuRoi Ragdoll Cattery",
+      "subtitle": "Your Trusted Ragdoll Breeder in Bulgaria",
+      "description": "Licensed, ethical breeder specializing in premium pedigree Ragdoll kittens"
+    },
+    "intro": {
+      "title": "Welcome to BleuRoi Ragdoll Cattery",
+      "paragraph1": "BleuRoi Ragdoll Cattery is a licensed and registered Ragdoll breeder located in Bulgaria, specializing in breeding exceptional pedigree Ragdoll kittens. Every kitten comes with complete documentation including pedigree papers, European pet passport, two vaccinations, and microchip. We maintain the highest standards of health, socialization, and ethical breeding practices.",
+      "paragraph2": "Our breeding cats originate from prestigious European and Russian bloodlines. We offer Ragdoll kittens for various purposes: beloved family pets (neutered and intact), show-quality cats, and carefully selected breeding stock for licensed catteries. We proudly ship throughout Europe with no restrictions. Licensed by Bulgarian authorities (License 47090/2024) and registered with FIFe and WCF international cat federations. Our breeding cats are champions with excellent show evaluations.",
+      "callout": "Contact us for additional photos and detailed information about our available Ragdoll kittens"
+    },
+    "history": {
+      "title": "The Ragdoll Breed: A Brief History",
+      "paragraph1": "The Ragdoll cat breed was developed in California, USA, during the 1960s by breeder Ann Baker. The breed is named for its characteristic tendency to go limp and relaxed when picked up, resembling a child's ragdoll toy. Ragdolls are known for their striking blue eyes, semi-long silky coat, and color-point patterns.",
+      "paragraph2": "Ragdolls are among the largest domestic cat breeds, with males weighing 15-20 pounds and females 10-15 pounds. They are renowned for their gentle, affectionate, and docile temperament, making them ideal family companions. The breed was officially recognized by major cat registries in the 1960s-1970s and has since become one of the most popular cat breeds worldwide.",
+      "quote": "Ragdolls are the gentle giants of the cat world - affectionate, intelligent, and wonderfully calm."
+    },
+    "ragdollInfo": {
+      "title": "Why Choose a Ragdoll Cat?",
+      "subtitle": "The Perfect Family Companion",
+      "character": {
+        "title": "Exceptional Temperament",
+        "description": "Ragdolls are renowned for their gentle, affectionate, and calm nature. They are highly social cats who form strong bonds with their families, follow their owners around the house, and enjoy being held and cuddled. Despite their large size, Ragdolls are docile and patient, making them excellent with children and other pets."
+      },
+      "origin": {
+        "title": "Breed Origin & Development",
+        "description": "Developed in 1960s California by breeder Ann Baker, the Ragdoll breed was created through selective breeding emphasizing temperament and appearance. The breed combines stunning physical beauty with an exceptionally gentle personality. Today, Ragdolls are internationally recognized and cherished worldwide."
+      },
+      "appearance": {
+        "title": "Stunning Physical Characteristics",
+        "description": "Ragdolls are large, muscular cats with semi-long, silky coats that require minimal grooming. Their most distinctive feature is their piercing blue eyes and color-point pattern. The breed features a medium-length coat that is soft and rabbit-like in texture, with minimal shedding compared to other long-haired breeds."
+      },
+      "colors": {
+        "title": "Beautiful Color Patterns",
+        "description": "Ragdolls come in three main patterns: Colorpoint (darker points on ears, face, legs, and tail), Mitted (white mittens on paws and chin), and Bicolor (white inverted V on face and white chest and legs). Available in seal, blue, chocolate, lilac, red, and cream color variations."
+      }
+    },
+    "cta": {
+      "title": "Ready to Welcome a Ragdoll Kitten?",
+      "subtitle": "Reserve Your Pedigree Ragdoll Kitten Today",
+      "description": "Contact BleuRoi Ragdoll Cattery to learn about our available kittens, upcoming litters, and reservation process. We provide comprehensive support throughout the adoption process and beyond.",
+      "button": "Contact the Breeder",
+      "benefits": [
+        "✓ TICA & FIFe Registered Breeder",
+        "✓ Champion Bloodlines from Europe & Russia",
+        "✓ Complete Health Documentation",
+        "✓ European Shipping Available",
+        "✓ Lifetime Breeder Support"
+      ]
+    }
   },
   "featuredModels": {
-    "title": "Meet Our Stars",
+    "title": "Meet Our Ragdoll Cats",
+    "subtitle": "Champion Bloodlines & Exceptional Temperament",
+    "description": "Discover our beautiful Ragdoll cats featuring champion pedigrees and stunning appearance",
     "categories": {
-      "all": "All",
-      "adult": "Adults",
-      "kitten": "Kittens",
-      "retired": "Retired",
+      "all": "All Cats",
+      "adult": "Adult Cats",
+      "kitten": "Available Kittens",
+      "retired": "Retired Champions",
       "male": "Males",
       "female": "Females"
     },
-    "galleryLabel": "Gallery",
+    "galleryLabel": "Photo Gallery",
     "sectionTitles": {
-      "male": "Males",
-      "female": "Females",
-      "kitten": "Kittens (below 1 year)"
-    }
+      "male": "Our Male Ragdoll Cats",
+      "female": "Our Female Ragdoll Cats",
+      "kitten": "Available Ragdoll Kittens (Under 1 Year)"
+    },
+    "loading": "Loading our Ragdoll cats...",
+    "noAvailable": "No cats available to display at this time. Please check back soon or contact us for upcoming litters.",
+    "selectModel": "Inquire About This Cat",
+    "viewPedigree": "View Full Pedigree",
+    "morePhotos": "View Photo Gallery",
+    "reserveKitten": "Reserve This Kitten",
+    "availableForBreeding": "Available for Breeding",
+    "petOnly": "Pet Homes Only"
   },
   "gallery": {
-    "subtitle": "Premium Collection",
-    "title": "Gallery",
+    "subtitle": "Premium Ragdoll Cats",
+    "title": "Our Ragdoll Gallery",
+    "description": "Browse our collection of stunning Ragdoll cats and kittens",
     "categories": {
-      "all": "All",
-      "adult": "Adults",
+      "all": "All Photos",
+      "adult": "Adult Cats",
       "kitten": "Kittens",
-      "retired": "Retired"
+      "retired": "Retired Champions"
     }
   },
   "businessGallery": {
-    "subtitle": "Our Achievements",
-    "title": "Awards & Recognition",
-    "description": "Celebrating our journey of excellence in Ragdoll breeding, showcasing awards, certificates, and memorable moments.",
+    "subtitle": "Our Achievements & Recognition",
+    "title": "Awards & Show Success",
+    "description": "Celebrating our journey of excellence in Ragdoll breeding. View our cat show awards, championship certificates, and memorable moments from international exhibitions.",
     "categories": {
-      "all": "All"
+      "all": "All Awards"
     }
   },
   "tiktok": {
-    "title": "Our TikTok Videos",
-    "subtitle": "Follow us on TikTok for daily moments with our beautiful Ragdoll cats",
-    "followButton": "Follow us on TikTok",
-    "followDescription": "@bleuroi_ragdoll - Daily moments with our Ragdoll cats"
+    "title": "Follow Our Ragdoll Cats on TikTok",
+    "subtitle": "Daily moments with our beautiful blue-eyed Ragdoll cats and adorable kittens",
+    "followButton": "Follow @bleuroi_ragdoll on TikTok",
+    "followDescription": "@bleuroi_ragdoll - Watch our Ragdoll kittens grow and play every day"
   },
   "contact": {
-    "modalTitle": "Contact Us",
-    "processStart": "To start the process for",
-    "sendMessage": "Send us a message with the cat's name on any of these social platforms to start the process",
-    "getInTouch": "Get in touch with us",
-    "socialPlatforms": "Choose one of the social platforms to contact us for information",
+    "title": "Contact BleuRoi Ragdoll Cattery",
+    "subtitle": "Reserve Your Ragdoll Kitten Today",
+    "modalTitle": "Get in Touch",
+    "processStart": "To inquire about",
+    "sendMessage": "Send us a message mentioning the cat's name via any of these social platforms to begin the reservation process",
+    "getInTouch": "Contact Our Ragdoll Breeder",
+    "socialPlatforms": "Choose your preferred contact method to inquire about our Ragdoll kittens",
     "connectVia": "Connect via",
-    "mentionCat": "Don't forget to mention the cat's name:"
+    "mentionCat": "Please mention the cat's name:",
+    "formTitle": "Send an Inquiry",
+    "formName": "Your Name",
+    "formNamePlaceholder": "Enter your name",
+    "formEmail": "Email Address",
+    "formEmailPlaceholder": "your@email.com",
+    "formPhone": "Phone Number",
+    "formPhonePlaceholder": "+359...",
+    "formMessage": "Message",
+    "formMessagePlaceholder": "Tell us about yourself and which kitten you're interested in...",
+    "formSubmit": "Send Message",
+    "infoTitle": "Contact Information",
+    "infoDescription": "For more information about our beautiful Ragdoll cats and adoption requirements",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "locationAddress": "Gotse Delchev, Bulgaria"
   },
   "pedigree": {
-    "title": "Pedigree",
+    "title": "Ragdoll Pedigree",
     "familyTree": "Family tree of",
     "link": "Link: ragdollbleuroi.eu",
-    "loading": "Loading pedigree...",
-    "clickInfo": "Click for more information",
+    "loading": "Loading pedigree information...",
+    "clickInfo": "Click for detailed information",
     "mother": "Mother",
     "father": "Father",
-    "noData": "No data available",
-    "noParentInfo": "No parent information available",
-    "notEntered": "Pedigree not yet entered in the system",
+    "noData": "Information not available",
+    "noParentInfo": "Parent information not yet available",
+    "notEntered": "Pedigree information not yet entered in the system",
     "catInfo": "Cat Information",
     "name": "Name:",
     "age": "Age:",
-    "color": "Color:",
+    "color": "Color Pattern:",
     "status": "Status:",
     "gender": "Gender:",
     "male": "Male",
     "female": "Female",
-    "additionalInfo": "Additional Information:"
-  },
-  "featuredModels": {
-    "title": "Meet Our Stars",
-    "categories": {
-      "all": "All",
-      "adult": "Adults",
-      "kitten": "Kittens",
-      "retired": "Retired",
-      "male": "Males",
-      "female": "Females"
-    },
-    "galleryLabel": "Gallery",
-    "sectionTitles": {
-      "male": "Males",
-      "female": "Females",
-      "kitten": "Kittens (below 1 year)"
-    },
-    "loading": "Loading cats...",
-    "noAvailable": "No cats available at the moment",
-    "selectModel": "Select This Model",
-    "viewPedigree": "View Pedigree",
-    "morePhotos": "More Photos"
+    "additionalInfo": "Additional Details:",
+    "viewFullPedigree": "View Complete Pedigree Tree",
+    "championTitle": "Champion Titles:"
   },
   "footer": {
-    "address": "Bulgaria, Gotse Delchev, Sestri Dukovi 4, 2900",
-    "copyright": "© 2025 BleuRoi Ragdoll Cattery. All rights reserved."
+    "about": "About BleuRoi Cattery",
+    "aboutText": "Licensed Ragdoll breeder in Bulgaria specializing in pedigree Ragdoll kittens with champion bloodlines. TICA & FIFe registered.",
+    "quickLinks": "Quick Links",
+    "ourCats": "Our Ragdoll Cats",
+    "availableKittens": "Available Kittens",
+    "aboutUs": "About the Cattery",
+    "contactUs": "Contact Breeder",
+    "followUs": "Follow Our Ragdolls",
+    "address": "Gotse Delchev, Sestri Dukovi 4, 2900, Bulgaria",
+    "copyright": "© 2025 BleuRoi Ragdoll Cattery. All rights reserved.",
+    "license": "Licensed Breeder | License 47090/2024",
+    "registrations": "TICA Registered | FIFe Member | WCF Member"
   },
   "locationMap": {
-    "title": "You can find us at"
+    "title": "Visit Our Ragdoll Cattery",
+    "subtitle": "Located in Gotse Delchev, Bulgaria",
+    "description": "Schedule a visit to meet our Ragdoll cats and kittens in person"
+  },
+  "news": {
+    "title": "Latest News from BleuRoi Cattery",
+    "subtitle": "Stay updated with our latest Ragdoll kitten litters, show results, and cattery news",
+    "readMore": "Read Full Article",
+    "viewAll": "View All News & Updates",
+    "noNews": "No news articles published at this time. Check back soon for updates!",
+    "recentPosts": "Recent News",
+    "categories": {
+      "all": "All News",
+      "litters": "New Litters",
+      "shows": "Cat Show Results",
+      "updates": "Cattery Updates",
+      "available": "Available Kittens"
+    },
+    "shareArticle": "Share this article",
+    "relatedArticles": "Related Articles",
+    "backToNews": "Back to All News"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions About Ragdoll Kittens",
+    "subtitle": "Everything You Need to Know Before Buying a Ragdoll Kitten",
+    "viewAll": "View All Questions",
+    "items": [
+      {
+        "question": "How much does a Ragdoll kitten cost?",
+        "answer": "The price of a pedigree Ragdoll kitten from BleuRoi Cattery varies depending on quality, pedigree, color pattern, and intended purpose (pet, breeding, or show quality). Pet-quality Ragdoll kittens typically range from €800-1,200, while show and breeding-quality kittens command premium prices. All our kittens come with complete documentation including pedigree papers, European pet passport, two vaccinations, microchip, and health certificate. Contact us directly for current pricing and available kittens."
+      },
+      {
+        "question": "Are your Ragdoll kittens TICA registered?",
+        "answer": "Yes! BleuRoi Ragdoll Cattery is officially registered with TICA (The International Cat Association), FIFe (Fédération Internationale Féline), and WCF (World Cat Federation). All our Ragdoll kittens come with authentic pedigree papers from internationally recognized cat registries, ensuring their purebred status and champion bloodlines. We hold License 47090/2024 from Bulgarian authorities, confirming our commitment to ethical breeding standards."
+      },
+      {
+        "question": "What health guarantees do you provide with Ragdoll kittens?",
+        "answer": "Every Ragdoll kitten from BleuRoi Cattery comes with comprehensive health documentation and guarantees. All kittens receive two vaccinations, microchipping, thorough veterinary health examinations, and a European pet passport before going to their new homes. Our breeding cats are tested for genetic diseases common to Ragdolls including HCM (hypertrophic cardiomyopathy) and PKD (polycystic kidney disease). We provide a written health guarantee and offer lifetime support to all our kitten families. Kittens leave our cattery at minimum 12-14 weeks of age, fully socialized and litter trained."
+      },
+      {
+        "question": "Do you ship Ragdoll kittens to other European countries?",
+        "answer": "Yes, we ship Ragdoll kittens throughout Europe! BleuRoi Cattery arranges safe, professional pet transport services to most European countries. Your kitten will travel with complete documentation including EU pet passport, health certificates, and all required paperwork for international travel. We work with experienced pet transportation companies to ensure your kitten's comfort and safety during the journey. We can also arrange for you to pick up your kitten personally from our cattery in Bulgaria. Contact us to discuss shipping options and costs to your specific location."
+      },
+      {
+        "question": "What makes Ragdoll cats good family pets?",
+        "answer": "Ragdoll cats are exceptional family companions known for their gentle, affectionate, and docile temperament. They are called 'Ragdolls' because they tend to go limp and relaxed when picked up. These beautiful blue-eyed cats are highly social, forming strong bonds with their families and getting along wonderfully with children and other pets. Ragdolls are intelligent, trainable, and generally quiet cats with soft, melodious voices. Unlike many cat breeds, Ragdolls typically enjoy being held and cuddled, making them perfect lap cats. Their calm nature and adaptable personality make them ideal for families, seniors, and first-time cat owners."
+      },
+      {
+        "question": "What color patterns do your Ragdoll kittens come in?",
+        "answer": "BleuRoi Cattery breeds Ragdoll kittens in all three recognized patterns: Colorpoint (solid color points on ears, face, legs, and tail), Mitted (colorpoint with white mittens on paws and white chin), and Bicolor (white inverted 'V' on face with white chest, legs, and belly). Our kittens come in various beautiful colors including seal, blue, chocolate, lilac, red, and cream. All Ragdolls have striking blue eyes. Browse our available kittens page to see current colors and patterns, or contact us about upcoming litters if you're looking for a specific color combination."
+      },
+      {
+        "question": "How do I reserve a Ragdoll kitten from your cattery?",
+        "answer": "Reserving a Ragdoll kitten from BleuRoi Cattery is simple! First, browse our 'Available Kittens' page or contact us about upcoming litters. Once you've selected a kitten, we'll discuss your family situation, experience with cats, and home environment to ensure a perfect match. A reservation deposit secures your chosen kitten. We maintain regular contact with updates, photos, and videos as your kitten grows. Kittens join their new families at 12-14 weeks of age, fully vaccinated, microchipped, and socialized. We provide comprehensive guidance on Ragdoll care, nutrition, and training. Contact us via phone (+359894 474 966), email (info@ragdollbleuroi.eu), or social media to begin the reservation process."
+      },
+      {
+        "question": "What is included when I buy a Ragdoll kitten from BleuRoi?",
+        "answer": "Every Ragdoll kitten from BleuRoi Cattery comes with a complete package ensuring the best start in their new home: Authentic pedigree papers from FIFe/WCF registries showing champion bloodlines, European pet passport with full travel documentation, two core vaccinations (FVRCP), microchip implantation and registration, comprehensive veterinary health examination and certificate, deworming treatments, kitten starter kit including food samples, care instructions, and toy, lifetime breeder support and guidance, and a written health guarantee. We also provide detailed information about feeding, grooming, health care, and training your Ragdoll kitten."
+      },
+      {
+        "question": "What is the temperament of Ragdoll cats?",
+        "answer": "Ragdoll cats are known as 'gentle giants' with exceptional temperament. They are extremely affectionate and loving, with a docile and calm demeanor. Ragdolls are patient with children, sociable with other pets, and intelligent enough to be easily trained. They have a low-maintenance personality and a characteristic tendency to go limp when held (hence 'Ragdoll'). These loyal cats often follow their owners around and are quieter than most cat breeds, making them ideal companions for any home environment."
+      },
+      {
+        "question": "At what age can Ragdoll kittens leave for their new homes?",
+        "answer": "Ragdoll kittens from BleuRoi Cattery leave at 12-14 weeks of age minimum. This ensures kittens are fully weaned and eating independently, properly socialized with littermates, litter box trained, have received both core vaccinations, developed strong immune systems, and are ready for the transition to their new home. This extended time with their mother and siblings is crucial for developing proper social skills and confident, well-adjusted personalities."
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "What Our Ragdoll Families Say",
+    "subtitle": "Trusted by Ragdoll lovers across Europe",
+    "viewAll": "Read All Reviews"
+  },
+  "callToAction": {
+    "primary": "Reserve Your Ragdoll Kitten",
+    "secondary": "Contact the Breeder",
+    "viewAvailable": "View Available Kittens",
+    "learnMore": "Learn More About Ragdolls",
+    "scheduleVisit": "Schedule a Cattery Visit"
+  },
+  "trust": {
+    "title": "Why Choose BleuRoi Ragdoll Cattery?",
+    "licensed": {
+      "title": "Licensed & Registered Breeder",
+      "description": "Official License 47090/2024 | TICA, FIFe & WCF registered"
+    },
+    "health": {
+      "title": "Health Tested Breeding Cats",
+      "description": "All breeding cats tested for HCM, PKD, and genetic diseases"
+    },
+    "champion": {
+      "title": "Champion Bloodlines",
+      "description": "European and Russian champion pedigrees with show titles"
+    },
+    "support": {
+      "title": "Lifetime Support",
+      "description": "Ongoing guidance and support for your Ragdoll's entire life"
+    },
+    "documentation": {
+      "title": "Complete Documentation",
+      "description": "Pedigree papers, EU passport, vaccinations, microchip, health certificate"
+    },
+    "ethical": {
+      "title": "Ethical Breeding Practices",
+      "description": "Raised in family environment with excellent socialization"
+    }
+  },
+  "seo": {
+    "imageAlt": {
+      "ragdollKitten": "Ragdoll kitten",
+      "sealBicolor": "Seal bicolor Ragdoll",
+      "bluePoint": "Blue point Ragdoll",
+      "breeder": "Ragdoll breeder Bulgaria",
+      "cattery": "BleuRoi Ragdoll Cattery",
+      "champion": "Champion Ragdoll cat",
+      "kitten": "Pedigree Ragdoll kitten"
+    }
+  },
+  "admin": {
+    "tabs": {
+      "pedigree": "Pedigree Management",
+      "news": "News Articles",
+      "seo": "SEO Settings",
+      "tiktok": "TikTok Videos",
+      "settings": "Site Settings"
+    },
+    "news": {
+      "title": "News & Announcements",
+      "create": "Create News Article",
+      "edit": "Edit Article",
+      "published": "Published",
+      "draft": "Draft",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "seo": {
+      "title": "SEO Manager",
+      "selectPage": "Select page to edit",
+      "score": "SEO Score",
+      "metaTitle": "Meta Title",
+      "metaDescription": "Meta Description",
+      "keywords": "Keywords",
+      "preview": "Google Preview",
+      "save": "Save SEO Settings"
+    },
+    "analytics": {
+      "title": "Analytics & Tracking",
+      "googleConsole": "Google Search Console",
+      "metaPixel": "Meta Pixel ID",
+      "googleAnalytics": "Google Analytics 4",
+      "save": "Save Analytics",
+      "status": "Setup Status",
+      "active": "Active",
+      "inactive": "Not Configured"
+    }
   }
 }
