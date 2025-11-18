@@ -46,12 +46,13 @@ const News = () => {
   return (
     <>
       <Helmet>
-        <title>Новини от BleuRoi Ragdoll Cattery | {t('meta.title')}</title>
-        <meta 
-          name="description" 
-          content="Последните новини, събития и постижения от BleuRoi Ragdoll Cattery. Следете развитието на нашето семейство от красиви рагдол котки." 
+        <title>Новини и Събития | BleuRoi Ragdoll Cattery България</title>
+        <meta
+          name="description"
+          content="Последни новини, събития и информация от развъдник BleuRoi Ragdoll. Нови котила, изложби, шампионски титли и актуална информация за Рагдол котки."
         />
-        <meta name="keywords" content="рагдол новини, ragdoll cattery новини, котки събития, BleuRoi новини" />
+        <meta name="keywords" content="ragdoll новини българия, котила ragdoll, изложби котки, блеурои новини, рагдол събития" />
+        <link rel="canonical" href={`${window.location.origin}/news`} />
         
         {/* Open Graph tags */}
         <meta property="og:title" content="Новини от BleuRoi Ragdoll Cattery" />

@@ -19,13 +19,14 @@ const About = () => {
   return (
     <>
       <Helmet>
-        <title>За нас | BleuRoi Ragdoll Cattery</title>
-        <meta name="description" content="Лицензиран развъдник BleuRoi Ragdoll Cattery – история, философия и информация за породата Рагдол. Регистрирани към FIFe и WCF. Лиценз 47090/2024." />
-        <meta name="keywords" content="BleuRoi Ragdoll, развъдник, Рагдол, котки, FIFe, WCF, лиценз 47090/2024, котенца" />
-        <meta property="og:title" content="За нас | BleuRoi Ragdoll Cattery" />
-        <meta property="og:description" content="Лицензиран развъдник на Рагдол котки – история, философия и информация за породата." />
+        <title>За Нас | Лицензиран Развъдник Ragdoll Котки BleuRoi | FIFe WCF</title>
+        <meta name="description" content="BleuRoi Ragdoll Cattery - професионален развъдник на породисти Рагдол котки в България. Регистрирани в FIFe и WCF. Лиценз 47090/2024. Шампионски родители от Европа." />
+        <meta name="keywords" content="развъдник ragdoll българия, bleuroi ragdoll, лицензиран развъдник котки, FIFe WCF, породисти котки, професионален развъдник, ragdoll cattery" />
+        <meta property="og:title" content="За Нас | Лицензиран Развъдник Ragdoll Котки BleuRoi" />
+        <meta property="og:description" content="BleuRoi Ragdoll Cattery - професионален развъдник на породисти Рагдол котки в България. Регистрирани в FIFe и WCF." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${window.location.origin}/about`} />
+        <link rel="canonical" href={`${window.location.origin}/about`} />
       </Helmet>
 
       <div className="min-h-screen bg-background relative">
@@ -108,6 +109,29 @@ const About = () => {
         {/* Footer */}
         <LocationMap />
         <Footer />
+
+        {/* Structured Data for Organization */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "BleuRoi Ragdoll Cattery",
+            "alternateName": "БлюРоа Рагдол Развъдник",
+            "url": "https://www.ragdollbleuroi.eu",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Сестри Дукови 4",
+              "addressLocality": "Гоце Делчев",
+              "postalCode": "2900",
+              "addressCountry": "BG"
+            },
+            "sameAs": [
+              "https://www.facebook.com/bleuroi.ragdoll",
+              "https://www.instagram.com/bleuroi.ragdoll",
+              "https://www.tiktok.com/@bleuroi.ragdol.cattery"
+            ]
+          })}
+        </script>
       </div>
     </>
   );
