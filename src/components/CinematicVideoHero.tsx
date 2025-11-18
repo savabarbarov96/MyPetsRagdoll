@@ -226,9 +226,12 @@ const CinematicVideoHero = () => {
           <h2 className="font-playfair text-2xl md:text-4xl lg:text-5xl font-light mb-6 text-blue-100 drop-shadow-xl">
             BleuRoi Ragdoll Cattery
           </h2>
-          
+
           <p className="text-lg md:text-xl lg:text-2xl text-white/90 font-light max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
-            Award winning breeder
+            Лицензиран Развъдник на Ragdoll Котки в България
+          </p>
+          <p className="text-base md:text-lg text-white/80 font-light mt-4 drop-shadow-lg">
+            FIFe & WCF | Лиценз 47090/2024
           </p>
         </div>
 
