@@ -9,6 +9,7 @@ import News from "./pages/News";
 import NewsArticle from "./pages/NewsArticle";
 import CatRedirect from "./pages/CatRedirect";
 import Analytics from "./components/Analytics";
+import VisitorTracker from "./components/VisitorTracker";
 import { LocationBasedTheme } from "@/hooks/useTheme";
 import { Helmet } from 'react-helmet-async';
 import { LanguageProvider, useLanguage } from "@/hooks/useLanguage";
@@ -16,34 +17,35 @@ import PerformanceOptimizer from "./components/PerformanceOptimizer";
 import { ImagePreloader, CRITICAL_IMAGES, BackgroundImagePreloader } from "./components/ImagePreloader";
 import { useCriticalImagePreloader } from "@/hooks/useImagePreloader";
 
+// Additional images to preload in background after critical images
+const BACKGROUND_IMAGES = [
+  '/featured-cat-1.jpg',
+  '/featured-cat-2.jpg',
+  '/model-cat-1.jpg',
+  '/model-cat-2.jpg',
+  '/model-cat-3.jpg'
+];
+
 const AppContent = () => {
   const { t } = useLanguage();
   const { isLoading } = useCriticalImagePreloader(CRITICAL_IMAGES);
-  
-  // Additional images to preload in background after critical images
-  const backgroundImages = [
-    '/featured-cat-1.jpg',
-    '/featured-cat-2.jpg',
-    '/model-cat-1.jpg',
-    '/model-cat-2.jpg',
-    '/model-cat-3.jpg'
-  ];
   
   return (
     <>
       <Toaster />
       <Sonner />
       <Analytics />
+      <VisitorTracker />
       <PerformanceOptimizer />
-      
+
       {/* Preload critical images with loading UI */}
-      <ImagePreloader 
-        criticalImages={CRITICAL_IMAGES} 
+      <ImagePreloader
+        criticalImages={CRITICAL_IMAGES}
         showProgress={isLoading}
       />
-      
+
       {/* Background preload non-critical images */}
-      <BackgroundImagePreloader images={backgroundImages} />
+      <BackgroundImagePreloader images={BACKGROUND_IMAGES} />
       
       <Helmet>
         <title>{t('meta.title')}</title>

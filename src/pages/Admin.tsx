@@ -8,14 +8,14 @@ import TikTokVideoManager from '@/components/admin/TikTokVideoManager';
 import SocialMediaSettings from '@/components/admin/SocialMediaSettings';
 import NewsManager from '@/components/admin/NewsManager';
 import GalleryManager from '@/components/admin/GalleryManager';
-
+import AnalyticsManager from '@/components/admin/AnalyticsManager';
 import HeroVideoManager from '@/components/admin/HeroVideoManager';
 import QRCodeGenerator from '@/components/admin/QRCodeGenerator';
 import { CatData } from '@/services/convexCatService';
 import ragdollLogo from '@/assets/ragdoll-logo.png';
 import { Menu, X } from 'lucide-react';
 
-type AdminTab = 'pedigree' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr';
+type AdminTab = 'pedigree' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr' | 'analytics';
 
 const Admin = () => {
   const { isAuthenticated, isLoading, logout } = useAdminAuth();
@@ -31,7 +31,8 @@ const Admin = () => {
     { id: 'tiktok' as AdminTab, label: 'TikTok видеа', icon: '🎵' },
     { id: 'social' as AdminTab, label: 'Социални мрежи', icon: '📱' },
     { id: 'herovideo' as AdminTab, label: 'Hero Видео', icon: '🎬' },
-    { id: 'qr' as AdminTab, label: 'QR Код', icon: '📊' }
+    { id: 'qr' as AdminTab, label: 'QR Код', icon: '📊' },
+    { id: 'analytics' as AdminTab, label: 'Аналитика', icon: '📈' }
   ];
 
   const handleTabChange = (tab: AdminTab) => {
@@ -96,6 +97,8 @@ const Admin = () => {
         return <HeroVideoManager />;
       case 'qr':
         return <QRCodeGenerator />;
+      case 'analytics':
+        return <AnalyticsManager />;
       default:
         return null;
     }

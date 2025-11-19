@@ -28,17 +28,9 @@ const globalImageCache = new Map<string, PreloadedImage>();
 export const useImagePreloader = (): UseImagePreloaderReturn => {
   const [preloadedImages, setPreloadedImages] = useState<PreloadedImage[]>([]);
 
-  // Sync local state with global cache
+  // Sync local state with global cache on mount only
   useEffect(() => {
-    const updateFromCache = () => {
-      setPreloadedImages(Array.from(globalImageCache.values()));
-    };
-    
-    updateFromCache();
-    
-    // Set up interval to sync cache (in case other components update it)
-    const interval = setInterval(updateFromCache, 1000);
-    return () => clearInterval(interval);
+    setPreloadedImages(Array.from(globalImageCache.values()));
   }, []);
 
   const preloadImage = useCallback(async (src: string, options: PreloadOptions = {}): Promise<HTMLImageElement> => {

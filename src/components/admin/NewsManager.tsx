@@ -285,14 +285,14 @@ const NewsManager = () => {
                       </button>
                     </div>
                   ))}
-                  
-                  {/* Add new image button */}
-                  <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center min-h-24">
+
+                  {/* Add new image button using simplified ImageUpload */}
+                  <div className="border-2 border-dashed border-border rounded-lg overflow-hidden min-h-24">
                     <ImageUpload
-                      label=""
+                      label="Добави снимка"
                       onUploadSuccess={(url, storageId) => {
-                        setFormData(prev => ({ 
-                          ...prev, 
+                        setFormData(prev => ({
+                          ...prev,
                           gallery: [...prev.gallery, url]
                         }));
                       }}
@@ -304,13 +304,7 @@ const NewsManager = () => {
                         maxSizeInMB: 5,
                         quality: 0.8
                       }}
-                      showPreview={false}
-                      customTrigger={
-                        <div className="cursor-pointer text-center">
-                          <Plus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">Добави снимка</p>
-                        </div>
-                      }
+                      previewSize="small"
                     />
                   </div>
                 </div>

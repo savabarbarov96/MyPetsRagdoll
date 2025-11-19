@@ -13,11 +13,13 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as analytics from "../analytics.js";
 import type * as announcements from "../announcements.js";
 import type * as auth from "../auth.js";
 import type * as awards from "../awards.js";
 import type * as cats from "../cats.js";
 import type * as contact from "../contact.js";
+import type * as cron from "../cron.js";
 import type * as files from "../files.js";
 import type * as gallery from "../gallery.js";
 import type * as heroImages from "../heroImages.js";
@@ -37,11 +39,13 @@ import type * as tiktokVideos from "../tiktokVideos.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  analytics: typeof analytics;
   announcements: typeof announcements;
   auth: typeof auth;
   awards: typeof awards;
   cats: typeof cats;
   contact: typeof contact;
+  cron: typeof cron;
   files: typeof files;
   gallery: typeof gallery;
   heroImages: typeof heroImages;

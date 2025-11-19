@@ -215,9 +215,9 @@ export default defineSchema({
     description: v.optional(v.string()),
     imageUrl: v.string(),
     category: v.union(
-      v.literal("award"), 
-      v.literal("certificate"), 
-      v.literal("photo"), 
+      v.literal("award"),
+      v.literal("certificate"),
+      v.literal("photo"),
       v.literal("trophy"),
       v.literal("achievement")
     ),
@@ -233,4 +233,35 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_cat", ["associatedCatId"])
     .index("by_published_category", ["isPublished", "category"]),
+
+  // Real page visits for analytics
+  pageVisits: defineTable({
+    path: v.string(), // Page path (e.g., '/', '/about', '/news')
+    referrer: v.optional(v.string()), // HTTP referrer
+    userAgent: v.optional(v.string()), // Browser user agent
+    sessionId: v.string(), // Unique session identifier
+    timestamp: v.number(), // Unix timestamp in milliseconds
+    deviceType: v.union(
+      v.literal("mobile"),
+      v.literal("tablet"),
+      v.literal("desktop"),
+      v.literal("unknown")
+    ),
+    // Additional metadata
+    language: v.optional(v.string()), // Browser language
+    screenResolution: v.optional(v.string()), // Screen size
+  })
+    .index("by_path", ["path"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_path_timestamp", ["path", "timestamp"])
+    .index("by_session", ["sessionId"])
+    .index("by_device", ["deviceType"]),
+
+  // Synthetic visitor boosts (separate table for clarity)
+  syntheticVisits: defineTable({
+    date: v.string(), // Date in YYYY-MM-DD format
+    count: v.number(), // Number of synthetic visitors for this day (20-30)
+    createdAt: v.number(), // Unix timestamp when created
+  })
+    .index("by_date", ["date"]),
 }); 
