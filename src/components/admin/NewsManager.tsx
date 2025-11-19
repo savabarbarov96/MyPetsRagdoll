@@ -13,6 +13,7 @@ import { Plus, Edit, Trash2, Save, Eye, Calendar, FileText } from 'lucide-react'
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
+import { useToast } from '@/hooks/use-toast';
 
 type Announcement = {
   _id: Id<"announcements">;
@@ -31,6 +32,7 @@ type Announcement = {
 };
 
 const NewsManager = () => {
+  const { toast } = useToast();
   const announcements = useQuery(api.announcements.getAllAnnouncements);
   const createAnnouncement = useMutation(api.announcements.createAnnouncement);
   const updateAnnouncement = useMutation(api.announcements.updateAnnouncement);
@@ -90,6 +92,7 @@ const NewsManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting form...', formData);
     setIsSaving(true);
 
     try {
@@ -105,6 +108,11 @@ const NewsManager = () => {
           metaDescription: formData.metaDescription,
           metaKeywords: formData.metaKeywords,
         });
+        toast({
+          title: "Успех",
+          description: "Новината е обновена успешно",
+          variant: "default",
+        });
       } else {
         const nextSortOrder = announcements ? announcements.length + 1 : 1;
         await createAnnouncement({
@@ -117,10 +125,20 @@ const NewsManager = () => {
           metaDescription: formData.metaDescription,
           metaKeywords: formData.metaKeywords,
         });
+        toast({
+          title: "Успех",
+          description: "Новината е създадена успешно",
+          variant: "default",
+        });
       }
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving announcement:', error);
+      toast({
+        title: "Грешка",
+        description: error instanceof Error ? error.message : "Възникна грешка при запазването",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -130,8 +148,18 @@ const NewsManager = () => {
     if (confirm('Сигурни ли сте, че искате да изтриете тази новина?')) {
       try {
         await deleteAnnouncement({ id });
+        toast({
+          title: "Успех",
+          description: "Новината е изтрита успешно",
+          variant: "default",
+        });
       } catch (error) {
         console.error('Error deleting announcement:', error);
+        toast({
+          title: "Грешка",
+          description: "Възникна грешка при изтриването",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -139,8 +167,18 @@ const NewsManager = () => {
   const handleTogglePublication = async (id: Id<"announcements">) => {
     try {
       await togglePublication({ id });
+      toast({
+        title: "Успех",
+        description: "Статусът на новината е променен",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Error toggling publication:', error);
+      toast({
+        title: "Грешка",
+        description: "Възникна грешка при промяната на статуса",
+        variant: "destructive",
+      });
     }
   };
 
@@ -203,7 +241,7 @@ const NewsManager = () => {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <Label className="text-sm font-medium text-muted-foreground">SEO настройки</Label>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="metaDescription">SEO описание</Label>
                   <Textarea
@@ -238,14 +276,19 @@ const NewsManager = () => {
                   label="Основна снимка"
                   currentImageUrl={formData.featuredImage}
                   onUploadSuccess={(url, storageId) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
+                    setFormData(prev => ({
+                      ...prev,
                       featuredImage: url,
                       featuredImageStorageId: storageId
                     }));
                   }}
                   onUploadError={(error) => {
                     console.error('Upload error:', error);
+                    toast({
+                      title: "Грешка при качване",
+                      description: error,
+                      variant: "destructive",
+                    });
                   }}
                   uploadOptions={{
                     imageType: 'news',
@@ -298,6 +341,11 @@ const NewsManager = () => {
                       }}
                       onUploadError={(error) => {
                         console.error('Gallery upload error:', error);
+                        toast({
+                          title: "Грешка при качване",
+                          description: error,
+                          variant: "destructive",
+                        });
                       }}
                       uploadOptions={{
                         imageType: 'news',
@@ -323,16 +371,16 @@ const NewsManager = () => {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSaving}
                   className="flex-1 min-h-[44px] flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {isSaving ? 'Запазване...' : 'Запази'}
                 </Button>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                   className="flex-1 min-h-[44px]"
@@ -379,7 +427,7 @@ const NewsManager = () => {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
                           <span>
-                            {announcement.isPublished 
+                            {announcement.isPublished
                               ? `Публикувано: ${formatDate(announcement.publishedAt)}`
                               : `Създадено: ${formatDate(announcement._creationTime)}`
                             }
@@ -399,14 +447,14 @@ const NewsManager = () => {
                     </p>
                     {announcement.featuredImage && (
                       <div className="mb-4">
-                        <img 
-                          src={announcement.featuredImage} 
+                        <img
+                          src={announcement.featuredImage}
                           alt={announcement.title}
                           className="w-full h-32 object-cover rounded-lg"
                         />
                       </div>
                     )}
-                    
+
                     {/* Gallery Images Preview */}
                     {announcement.gallery && announcement.gallery.length > 0 && (
                       <div className="mb-4">

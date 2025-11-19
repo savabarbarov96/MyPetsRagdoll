@@ -11,7 +11,9 @@ import {
   getPageLabel,
 } from '@/services/convexAnalyticsService';
 
-const AnalyticsManager = () => {
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const AnalyticsManagerContent = () => {
   const summary = useAnalyticsSummary();
   const dailyStats = useDailyStats(30);
   const pageStats = usePageStats();
@@ -60,13 +62,13 @@ const AnalyticsManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{summary.today.total}</div>
+              <div className="text-3xl font-bold text-gray-900">{summary?.today?.total ?? 0}</div>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Реални: {summary.today.real}
+                  Реални: {summary?.today?.real ?? 0}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  +{summary.today.synthetic}
+                  +{summary?.today?.synthetic ?? 0}
                 </Badge>
               </div>
             </CardContent>
@@ -81,13 +83,13 @@ const AnalyticsManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{summary.last7Days.total}</div>
+              <div className="text-3xl font-bold text-gray-900">{summary?.last7Days?.total ?? 0}</div>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Реални: {summary.last7Days.real}
+                  Реални: {summary?.last7Days?.real ?? 0}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  +{summary.last7Days.synthetic}
+                  +{summary?.last7Days?.synthetic ?? 0}
                 </Badge>
               </div>
             </CardContent>
@@ -102,13 +104,13 @@ const AnalyticsManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{summary.last30Days.total}</div>
+              <div className="text-3xl font-bold text-gray-900">{summary?.last30Days?.total ?? 0}</div>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Реални: {summary.last30Days.real}
+                  Реални: {summary?.last30Days?.real ?? 0}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  +{summary.last30Days.synthetic}
+                  +{summary?.last30Days?.synthetic ?? 0}
                 </Badge>
               </div>
             </CardContent>
@@ -123,13 +125,13 @@ const AnalyticsManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{summary.allTime.total}</div>
+              <div className="text-3xl font-bold text-gray-900">{summary?.allTime?.total ?? 0}</div>
               <div className="flex items-center gap-2 mt-2 text-sm">
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  Реални: {summary.allTime.real}
+                  Реални: {summary?.allTime?.real ?? 0}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  +{summary.allTime.synthetic}
+                  +{summary?.allTime?.synthetic ?? 0}
                 </Badge>
               </div>
             </CardContent>
@@ -241,6 +243,14 @@ const AnalyticsManager = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const AnalyticsManager = () => {
+  return (
+    <ErrorBoundary>
+      <AnalyticsManagerContent />
+    </ErrorBoundary>
   );
 };
 
