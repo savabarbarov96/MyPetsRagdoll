@@ -8,6 +8,8 @@ import Admin from "./pages/Admin";
 import News from "./pages/News";
 import NewsArticle from "./pages/NewsArticle";
 import CatRedirect from "./pages/CatRedirect";
+import British from "./pages/British";
+import AllCats from "./pages/AllCats";
 import Analytics from "./components/Analytics";
 import VisitorTracker from "./components/VisitorTracker";
 import { LocationBasedTheme } from "@/hooks/useTheme";
@@ -69,6 +71,8 @@ const AppContent = () => {
           <Route path="/about" element={<About />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:slug" element={<NewsArticle />} />
+          <Route path="/british" element={<British />} />
+          <Route path="/all-cats" element={<AllCats />} />
           <Route path="/cat/:catId" element={<CatRedirect />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

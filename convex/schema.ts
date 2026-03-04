@@ -19,12 +19,16 @@ export default defineSchema({
     freeText: v.optional(v.string()),
     // New fields for gallery filtering
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
+    // Breed field to distinguish Ragdoll from British Longhair
+    breed: v.optional(v.union(v.literal("ragdoll"), v.literal("british"))),
   })
     .index("by_displayed", ["isDisplayed"])
     .index("by_gender", ["gender"])
     .index("by_registration", ["registrationNumber"])
     .index("by_category", ["category"])
-    .index("by_category_displayed", ["category", "isDisplayed"]),
+    .index("by_category_displayed", ["category", "isDisplayed"])
+    .index("by_breed", ["breed"])
+    .index("by_breed_displayed", ["breed", "isDisplayed"]),
 
   // Pedigree connections between cats
   pedigreeConnections: defineTable({

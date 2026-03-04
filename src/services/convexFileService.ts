@@ -146,7 +146,7 @@ export const useMultiFileUpload = () => {
 
 // Utility to validate image files
 export const validateImageFile = (file: File): { valid: boolean; error?: string } => {
-  const maxSize = 5 * 1024 * 1024; // 5MB
+  const maxSize = 25 * 1024 * 1024; // 25MB - images are auto-compressed to ~800KB WebP before upload
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
   if (!allowedTypes.includes(file.type)) {
@@ -159,7 +159,7 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string 
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: 'Файлът е твърде голям. Максимално 5MB.'
+      error: 'Файлът е твърде голям. Максимално 25MB.'
     };
   }
 

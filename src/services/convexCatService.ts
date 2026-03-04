@@ -48,6 +48,14 @@ export const useDisplayedCatsByGenderAndAge = (section: 'male' | 'female' | 'kit
   return useQuery(api.cats.getDisplayedCatsByGenderAndAge, { section });
 };
 
+export const useDisplayedCatsByBreedGenderAndAge = (section: 'male' | 'female' | 'kitten', breed: 'ragdoll' | 'british') => {
+  return useQuery(api.cats.getDisplayedCatsByBreedGenderAndAge, { section, breed });
+};
+
+export const useCatsByBreed = (breed?: 'ragdoll' | 'british') => {
+  return useQuery(api.cats.getCatsByBreed, breed ? { breed } : "skip");
+};
+
 // Mutation hooks
 export const useCreateCat = () => {
   return useMutation(api.cats.createCat);
@@ -203,6 +211,8 @@ export type CatData = {
   internalNotes?: string;
   // New fields for gallery filtering
   category?: 'kitten' | 'adult' | 'all';
+  // Breed field
+  breed?: 'ragdoll' | 'british';
 };
 
 export type PedigreeConnection = {

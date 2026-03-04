@@ -21,12 +21,12 @@ interface CatGalleryProps {
   cats: CatData[];
 }
 
-const CatGallery = ({ 
-  onCatSelect, 
-  selectedCat, 
-  onAddCat, 
-  onEditCat, 
-  onAddToCanvas, 
+const CatGallery = ({
+  onCatSelect,
+  selectedCat,
+  onAddCat,
+  onEditCat,
+  onAddToCanvas,
   onDropCatToCanvas,
   onDeleteCat,
   onToggleDisplay,
@@ -37,8 +37,9 @@ const CatGallery = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'displayed' | 'hidden'>('all');
   const [selectedCats, setSelectedCats] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
-  
+
   const bulkUpdateCategory = useBulkUpdateCategory();
+  const hasCanvas = !!onDropCatToCanvas;
 
   const { startDrag, isDragging } = useDragFromGallery({
     onDrop: (cat, position) => {
@@ -50,16 +51,16 @@ const CatGallery = ({
     const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          cat.subtitle.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesGender = genderFilter === 'all' || cat.gender === genderFilter;
-    const matchesStatus = statusFilter === 'all' || 
+    const matchesStatus = statusFilter === 'all' ||
                          (statusFilter === 'displayed' && cat.isDisplayed) ||
                          (statusFilter === 'hidden' && !cat.isDisplayed);
-    
+
     return matchesSearch && matchesGender && matchesStatus;
   });
 
   const handleBulkCategoryUpdate = async (category: 'kitten' | 'adult' | 'all') => {
     if (selectedCats.size === 0) return;
-    
+
     try {
       await bulkUpdateCategory({
         catIds: Array.from(selectedCats) as Id<"cats">[],
@@ -132,7 +133,7 @@ const CatGallery = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"
         />
-        
+
         <div className="flex gap-2">
           <Select value={genderFilter} onValueChange={(value: 'all' | 'male' | 'female') => setGenderFilter(value)}>
             <SelectTrigger className="w-[120px]">
@@ -187,26 +188,26 @@ const CatGallery = ({
 
       {/* Gallery Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-1 gap-3">
+        <div className={hasCanvas ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3'}>
           {filteredCats.map((cat) => {
             const isSelected = selectedCat?._id === cat._id;
-            
+
             return (
               <Card
                 key={cat._id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
+                className={`cursor-pointer transition-shadow ${
                   isSelected ? 'ring-2 ring-blue-500 shadow-md' : ''
-                } ${onDropCatToCanvas ? 'hover:ring-1 hover:ring-green-400' : ''} ${
+                } ${hasCanvas ? 'hover:ring-1 hover:ring-green-400' : 'hover:shadow-sm'} ${
                   isDragging ? 'opacity-50' : ''
                 } ${bulkMode && selectedCats.has(cat._id) ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}
                 onClick={() => bulkMode ? toggleCatSelection(cat._id) : onCatSelect(cat)}
                 onDoubleClick={() => !bulkMode && onAddToCanvas?.(cat)}
                 onMouseDown={(e) => {
-                  if (onDropCatToCanvas && e.button === 0 && !bulkMode) {
+                  if (hasCanvas && e.button === 0 && !bulkMode) {
                     startDrag(cat, e.nativeEvent);
                   }
                 }}
-                title={bulkMode ? 'Кликнете за избиране' : (onDropCatToCanvas ? 'Влачете за добавяне на canvas или двойно кликнете' : '')}
+                title={bulkMode ? 'Кликнете за избиране' : (hasCanvas ? 'Влачете за добавяне на canvas или двойно кликнете' : '')}
               >
                 <CardContent className="p-3">
                   <div className="flex gap-3">
@@ -222,9 +223,9 @@ const CatGallery = ({
                     )}
 
                     {/* Cat Image */}
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={cat.image || '/placeholder.svg'}
+                        src={cat.image || cat.gallery?.[0] || '/british-herosection.jpg'}
                         alt={cat.name}
                         className="w-full h-full object-cover"
                       />
@@ -232,44 +233,36 @@ const CatGallery = ({
 
                     {/* Cat Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         <h3 className="font-semibold text-sm truncate">{cat.name}</h3>
-                        <Badge variant={cat.gender === 'male' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
+                        <Badge variant={cat.gender === 'male' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 flex-shrink-0">
                           {cat.gender === 'male' ? '♂' : '♀'}
                         </Badge>
                         {cat.category && (
-                          <Badge variant="outline" className="text-xs flex-shrink-0">
-                            {cat.category === 'kitten' ? '🐱 Коте' : cat.category === 'adult' ? '🐈 Възрастна' : '📂 Всички'}
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                            {cat.category === 'kitten' ? '🐱' : cat.category === 'adult' ? '🐈' : '📂'}
                           </Badge>
                         )}
                         {cat.isDisplayed && (
-                          <Badge variant="outline" className="text-xs text-green-600 flex-shrink-0">
-                            Показан
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-green-600 flex-shrink-0">
+                            ✓
                           </Badge>
                         )}
                       </div>
-                      
-                      <p className="text-xs text-gray-600 mb-1 truncate">{cat.subtitle}</p>
-                      <p className="text-xs text-gray-500 mb-2 truncate">{cat.age} • {cat.color}</p>
-                      
-                      {/* Status Info */}
-                      <div className="text-xs text-gray-500 mb-2">
-                        <p>📊 Статус: {cat.status}</p>
-                        {cat.registrationNumber && (
-                          <p>🔖 Рег. №: {cat.registrationNumber}</p>
-                        )}
-                        {onDropCatToCanvas && (
-                          <p className="text-blue-600 font-medium">👆 Влачете или двойно кликни</p>
-                        )}
-                      </div>
+
+                      <p className="text-xs text-gray-500 truncate">{cat.age} • {cat.color}</p>
+
+                      {hasCanvas && (
+                        <p className="text-[10px] text-blue-600 font-medium mt-1">👆 Влачете или двойно кликни</p>
+                      )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col gap-1 flex-shrink-0">
+                    <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="w-8 h-8 p-0 text-xs"
+                        className="w-7 h-7 p-0 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleDisplay(cat._id);
@@ -281,7 +274,7 @@ const CatGallery = ({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="w-8 h-8 p-0 text-xs"
+                        className="w-7 h-7 p-0 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           onEditCat(cat);
@@ -293,7 +286,7 @@ const CatGallery = ({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="w-8 h-8 p-0 text-xs text-red-600 hover:text-red-800"
+                        className="w-7 h-7 p-0 text-xs text-red-600 hover:text-red-800"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDeleteCat(cat._id);
@@ -315,7 +308,7 @@ const CatGallery = ({
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg mb-2">🐱 Няма котки</p>
             <p className="text-sm">
-              {cats.length === 0 
+              {cats.length === 0
                 ? 'Добавете първата котка'
                 : 'Променете филтрите за да видите котки'
               }

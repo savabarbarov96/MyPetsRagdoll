@@ -116,11 +116,14 @@ export const createCat = mutation({
     internalNotes: v.optional(v.string()),
     // New fields for gallery filtering
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
+    // Breed field
+    breed: v.optional(v.union(v.literal("ragdoll"), v.literal("british"))),
   },
   handler: async (ctx, args) => {
     const catId = await ctx.db.insert("cats", {
       ...args,
       isDisplayed: args.isDisplayed ?? true,
+      breed: args.breed ?? "ragdoll",
     });
     return catId;
   },
@@ -147,6 +150,8 @@ export const updateCat = mutation({
     internalNotes: v.optional(v.string()),
     // New fields for gallery filtering
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
+    // Breed field
+    breed: v.optional(v.union(v.literal("ragdoll"), v.literal("british"))),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -368,6 +373,7 @@ export const getDisplayedCatsByCategory = query({
 });
 
 // Get displayed cats by gender and age for the new three-section layout
+// Excludes British cats (they show on /british page)
 export const getDisplayedCatsByGenderAndAge = query({
   args: {
     section: v.union(v.literal("male"), v.literal("female"), v.literal("kitten"))
@@ -377,31 +383,107 @@ export const getDisplayedCatsByGenderAndAge = query({
       .query("cats")
       .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
       .collect();
-    
+
     const currentDate = new Date();
-    
+
     return allDisplayedCats.filter(cat => {
-      // Calculate age first
-      let ageInYears = 0;
-      if (cat.birthDate) {
+      // Exclude British cats from the Ragdoll homepage
+      if (cat.breed === "british") return false;
+
+      // Explicit category takes priority over age calculation
+      const isExplicitKitten = cat.category === "kitten";
+      const isExplicitAdult = cat.category === "adult";
+
+      // Only use age calculation when category is not explicitly set
+      let isKittenByAge = false;
+      if (!isExplicitKitten && !isExplicitAdult && cat.birthDate) {
         const birthDate = new Date(cat.birthDate);
-        ageInYears = (currentDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        const ageInYears = (currentDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        isKittenByAge = ageInYears < 1;
       }
-      
+
+      const isKitten = isExplicitKitten || (!isExplicitAdult && isKittenByAge);
+
       switch (args.section) {
         case "kitten":
-          // Kittens: all cats below 1 year (both genders)
-          return ageInYears < 1 || (!cat.birthDate && cat.category === "kitten");
+          return isKitten;
         case "male":
-          // Males: male cats 1 year and older
-          return cat.gender === "male" && (ageInYears >= 1 || (!cat.birthDate && cat.category !== "kitten"));
+          return cat.gender === "male" && !isKitten;
         case "female":
-          // Females: female cats 1 year and older
-          return cat.gender === "female" && (ageInYears >= 1 || (!cat.birthDate && cat.category !== "kitten"));
+          return cat.gender === "female" && !isKitten;
         default:
           return false;
       }
     });
+  },
+});
+
+// Get displayed cats by breed, gender and age — for breed-specific pages (e.g. /british)
+export const getDisplayedCatsByBreedGenderAndAge = query({
+  args: {
+    section: v.union(v.literal("male"), v.literal("female"), v.literal("kitten")),
+    breed: v.union(v.literal("ragdoll"), v.literal("british")),
+  },
+  handler: async (ctx, args) => {
+    const breedCats = await ctx.db
+      .query("cats")
+      .withIndex("by_breed_displayed", (q) => q.eq("breed", args.breed).eq("isDisplayed", true))
+      .collect();
+
+    const currentDate = new Date();
+
+    return breedCats.filter(cat => {
+      // Explicit category takes priority over age calculation
+      const isExplicitKitten = cat.category === "kitten";
+      const isExplicitAdult = cat.category === "adult";
+
+      // Only use age calculation when category is not explicitly set
+      let isKittenByAge = false;
+      if (!isExplicitKitten && !isExplicitAdult && cat.birthDate) {
+        const birthDate = new Date(cat.birthDate);
+        const ageInYears = (currentDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        isKittenByAge = ageInYears < 1;
+      }
+
+      const isKitten = isExplicitKitten || (!isExplicitAdult && isKittenByAge);
+
+      switch (args.section) {
+        case "kitten":
+          return isKitten;
+        case "male":
+          return cat.gender === "male" && !isKitten;
+        case "female":
+          return cat.gender === "female" && !isKitten;
+        default:
+          return false;
+      }
+    });
+  },
+});
+
+// Get all cats by breed (for admin)
+export const getCatsByBreed = query({
+  args: { breed: v.union(v.literal("ragdoll"), v.literal("british")) },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("cats")
+      .withIndex("by_breed", (q) => q.eq("breed", args.breed))
+      .collect();
+  },
+});
+
+// Migration: backfill existing cats with breed: "ragdoll"
+export const migrateExistingCatsToRagdoll = mutation({
+  handler: async (ctx) => {
+    const allCats = await ctx.db.query("cats").collect();
+    let migrated = 0;
+    for (const cat of allCats) {
+      if (!cat.breed) {
+        await ctx.db.patch(cat._id, { breed: "ragdoll" });
+        migrated++;
+      }
+    }
+    return { migrated, total: allCats.length };
   },
 });
 

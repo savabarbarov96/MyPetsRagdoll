@@ -6,7 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 const CatRedirect = () => {
   const { catId } = useParams<{ catId: string }>();
   const navigate = useNavigate();
-  
+
   // Try to fetch the cat to see if it exists
   const cat = useCatById(catId as Id<"cats"> | undefined);
 
@@ -14,8 +14,9 @@ const CatRedirect = () => {
     if (catId) {
       // Check if cat exists
       if (cat) {
-        // Redirect to main page with query parameters to open pedigree modal
-        navigate(`/?cat=${catId}&modal=pedigree`, { replace: true });
+        // Redirect to breed-appropriate page with query parameters
+        const basePath = cat.breed === 'british' ? '/british' : '/';
+        navigate(`${basePath}?cat=${catId}&modal=pedigree`, { replace: true });
       } else if (cat === null) {
         // Cat doesn't exist, redirect to main page
         navigate('/', { replace: true });

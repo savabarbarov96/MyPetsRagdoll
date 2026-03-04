@@ -252,7 +252,7 @@ export const ImageUpload = forwardRef<HTMLInputElement, ImageUploadProps>(({
                   {previewUrl ? 'Качете ново изображение' : placeholder}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  JPG, PNG, GIF или WebP (макс. 10MB)
+                  JPG, PNG, GIF или WebP (макс. 25MB, автоматична оптимизация)
                 </p>
               </div>
               <Button 

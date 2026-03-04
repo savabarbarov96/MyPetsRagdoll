@@ -12,7 +12,13 @@ const SEOIntroSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="font-playfair text-3xl md:text-4xl lg:text-5xl font-semibold mb-6 leading-tight">
+          <h1 className="font-playfair text-3xl md:text-4xl lg:text-5xl font-semibold mb-4 leading-tight">
+            BleuRoi Ragdoll Cattery
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground mb-6">
+            Лицензиран Развъдник на Ragdoll Котки в България | FIFe & WCF | Лиценз 47090/2024
+          </p>
+          <h2 className="font-playfair text-2xl md:text-3xl lg:text-4xl font-semibold mb-6 leading-tight">
             Вашият Надежден Развъдник за Ragdoll Котки в България
           </h2>
 

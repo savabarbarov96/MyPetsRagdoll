@@ -15,7 +15,7 @@ import { CatData } from '@/services/convexCatService';
 import ragdollLogo from '@/assets/ragdoll-logo.png';
 import { Menu, X } from 'lucide-react';
 
-type AdminTab = 'pedigree' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr' | 'analytics';
+type AdminTab = 'pedigree' | 'british' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr' | 'analytics';
 
 const Admin = () => {
   const { isAuthenticated, isLoading, logout } = useAdminAuth();
@@ -26,6 +26,7 @@ const Admin = () => {
 
   const adminTabs = [
     { id: 'pedigree' as AdminTab, label: 'Родословие', icon: '🌳' },
+    { id: 'british' as AdminTab, label: 'Британски', icon: '🐱' },
     { id: 'news' as AdminTab, label: 'Новини', icon: '📰' },
     { id: 'gallery' as AdminTab, label: 'Галерия', icon: '🖼️' },
     { id: 'tiktok' as AdminTab, label: 'TikTok видеа', icon: '🎵' },
@@ -82,6 +83,16 @@ const Admin = () => {
                 onCanvasReady={setCanvasInstance}
               />
             </div>
+          </div>
+        );
+      case 'british':
+        return (
+          <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <CatManager
+              onCatSelect={setSelectedCat}
+              selectedCat={selectedCat}
+              breed="british"
+            />
           </div>
         );
       case 'news':

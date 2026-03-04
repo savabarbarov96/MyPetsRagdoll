@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useCreateCat, useUpdateCat, useDeleteCat, useToggleCatDisplay, useCats, CatData } from '@/services/convexCatService';
+import { useState } from 'react';
+import { useCreateCat, useUpdateCat, useDeleteCat, useToggleCatDisplay, useCats, useCatsByBreed, CatData } from '@/services/convexCatService';
 import { useFileUpload, validateImageFile } from '@/services/convexFileService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,16 @@ interface CatManagerProps {
   selectedCat: CatData | null;
   onAddToCanvas?: (cat: CatData) => void;
   onDropCatToCanvas?: (cat: CatData, position: { x: number; y: number }) => void;
+  breed?: 'ragdoll' | 'british';
 }
 
-const CatManager = ({ onCatSelect, selectedCat, onAddToCanvas, onDropCatToCanvas }: CatManagerProps) => {
-  const cats = useCats();
+const CatManager = ({ onCatSelect, selectedCat, onAddToCanvas, onDropCatToCanvas, breed }: CatManagerProps) => {
+  const allCats = useCats();
+  const breedCats = useCatsByBreed(breed);
+  // When breed is set: prefer breed-specific query, fall back to client-side filter of all cats
+  const cats = breed
+    ? (breedCats ?? allCats?.filter(c => c.breed === breed))
+    : allCats;
   const createCat = useCreateCat();
   const updateCat = useUpdateCat();
   const deleteCat = useDeleteCat();
@@ -74,6 +80,16 @@ const CatManager = ({ onCatSelect, selectedCat, onAddToCanvas, onDropCatToCanvas
     e.preventDefault();
     
     try {
+      // If no main image set but gallery has images, use the first gallery image
+      let mainImage = formData.image;
+      let galleryImages = [...formData.gallery];
+      if (!mainImage && galleryImages.length > 0) {
+        mainImage = galleryImages[0];
+        galleryImages = galleryImages.slice(1);
+      }
+      // Always strip the main image from the gallery to avoid duplicates
+      const cleanGallery = galleryImages.filter(img => img !== mainImage);
+
       if (editingCat) {
         await updateCat({
           id: editingCat._id,
@@ -89,10 +105,10 @@ const CatManager = ({ onCatSelect, selectedCat, onAddToCanvas, onDropCatToCanvas
           internalNotes: formData.internalNotes || undefined,
           status: formData.status,
           isDisplayed: formData.isDisplayed,
-          image: formData.image,
-          gallery: formData.gallery,
-          // New fields for gallery filtering
-          category: formData.category
+          image: mainImage,
+          gallery: cleanGallery,
+          category: formData.category,
+          breed: breed ?? undefined,
         });
         setEditingCat(null);
       } else {
@@ -109,10 +125,10 @@ const CatManager = ({ onCatSelect, selectedCat, onAddToCanvas, onDropCatToCanvas
           internalNotes: formData.internalNotes || undefined,
           status: formData.status,
           isDisplayed: formData.isDisplayed,
-          image: formData.image,
-          gallery: formData.gallery,
-          // New fields for gallery filtering
-          category: formData.category
+          image: mainImage,
+          gallery: cleanGallery,
+          category: formData.category,
+          breed: breed ?? 'ragdoll',
         });
         setIsAddingCat(false);
       }

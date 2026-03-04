@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Helmet } from 'react-helmet-async';
 import ModernNavigation from "@/components/ModernNavigation";
-import CinematicVideoHero from "@/components/CinematicVideoHero";
+import ImageHero from "@/components/ImageHero";
 import SEOIntroSection from "@/components/SEOIntroSection";
 import FeaturedModelsSection from "@/components/FeaturedModelsSection";
 import FAQSection from "@/components/FAQSection";
@@ -81,7 +81,7 @@ const Index = () => {
 
         <div className="relative">
           <div id="home">
-            <CinematicVideoHero />
+            <ImageHero />
           </div>
 
           {/* SEO Introduction Section */}

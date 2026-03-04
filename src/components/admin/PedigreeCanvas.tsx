@@ -577,7 +577,7 @@ const PedigreeCanvas = ({ selectedCat, onCanvasReady }: PedigreeCanvasProps) => 
                         >
                           <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                             <img
-                              src={cat.image || '/placeholder.svg'}
+                              src={cat.image || '/british-herosection.jpg'}
                               alt={cat.name}
                               className="w-full h-full object-cover"
                             />
@@ -732,7 +732,7 @@ const PedigreeCanvas = ({ selectedCat, onCanvasReady }: PedigreeCanvasProps) => 
             <div className="w-full h-full p-2 flex flex-col">
               <div className="flex-1 bg-gray-100 rounded overflow-hidden">
                 <img
-                  src={node.cat.image || '/placeholder.svg'}
+                  src={node.cat.image || '/british-herosection.jpg'}
                   alt={node.cat.name}
                   className="w-full h-full object-cover"
                 />

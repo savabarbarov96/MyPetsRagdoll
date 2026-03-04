@@ -148,7 +148,7 @@ const ImageManager = ({
               }
             </p>
             <p className="text-sm text-muted-foreground">
-              PNG, JPG, GIF, WebP до 10MB всяко
+              PNG, JPG, GIF, WebP до 25MB (автоматична оптимизация)
             </p>
             {Object.keys(uploadProgress).length > 0 && (
               <div className="mt-2 space-y-1">
