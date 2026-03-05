@@ -26,7 +26,7 @@ const BritishHeroSection = () => {
       <div className="absolute inset-0 z-0 flex items-center justify-center bg-black">
         <img
           src="/british-herosection.jpg"
-          alt="BleuRoi Cattery - British Longhair cats"
+          alt="BleuRoi British Longhair & Shorthair Cattery - Champion cats Bulgaria"
           className={`max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-700 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}

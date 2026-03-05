@@ -60,7 +60,7 @@ const AllCats = () => {
               <div className="flex items-center gap-4">
                 <div className="h-px flex-1 bg-amber-300" />
                 <h2 className="font-playfair text-2xl lg:text-3xl font-light text-amber-700 whitespace-nowrap">
-                  British Longhair
+                  British Longhair & Shorthair
                 </h2>
                 <div className="h-px flex-1 bg-amber-300" />
               </div>

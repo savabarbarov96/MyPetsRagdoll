@@ -161,7 +161,7 @@ const ModernNavigation = () => {
                   <div className={`mx-3 my-1.5 h-px ${scrollY > 50 ? 'bg-border' : 'bg-white/20'}`} />
                   <div className={`px-3 py-1.5 text-xs uppercase tracking-wider font-medium ${
                     scrollY > 50 ? 'text-muted-foreground' : 'text-amber-300/70'
-                  }`}>British Longhair</div>
+                  }`}>British Longhair & Shorthair</div>
                   <Link
                     to="/british#models"
                     className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
@@ -308,7 +308,7 @@ const ModernNavigation = () => {
                 {t('navigation.kittens')}
               </button>
               <div className="px-3 pt-2 pb-1 text-xs uppercase tracking-wider text-amber-600/60 font-medium">
-                British Longhair {t('navigation.models')}
+                British Longhair & Shorthair {t('navigation.models')}
               </div>
               <Link
                 to="/british#models"

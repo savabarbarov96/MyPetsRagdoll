@@ -261,7 +261,13 @@ const CatCarePopup = ({ onClose }: CatCarePopupProps) => {
                   <div className="flex items-start space-x-2 sm:space-x-3">
                     <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      <strong>Начална цена:</strong> 1200-3000 лв. за чистокръвно котенце от качествен развъдник
+                      <strong>Начална цена (домашен любимец):</strong> 1300 € за чистокръвно котенце от качествен развъдник
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      <strong>Начална цена (разплод):</strong> 2000 € за котенце с права за развъдна дейност
                     </p>
                   </div>
                   <div className="flex items-start space-x-2 sm:space-x-3">

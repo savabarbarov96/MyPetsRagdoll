@@ -56,8 +56,8 @@ const British = () => {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "PetStore",
-            "name": "BleuRoi Cattery - British Longhair",
-            "description": "Лицензиран развъдник на чистокръвни Британски Дългокосмести котки в България",
+            "name": "BleuRoi Cattery - British Longhair & British Shorthair",
+            "description": "Лицензиран развъдник на чистокръвни Британски Дългокосмести и Късокосмести котки в България",
             "address": {
               "@type": "PostalAddress",
               "streetAddress": "Сестри Дукови 4",

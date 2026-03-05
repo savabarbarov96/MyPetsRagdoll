@@ -20,7 +20,7 @@
   "breedHero": {
     "subtitle": "Choose your breed",
     "ragdolls": "Ragdolls",
-    "britishLonghair": "British Longhair"
+    "britishLonghair": "British Longhair & British Shorthair"
   },
   "hero": {
     "mainTitle": "Ragdoll",
@@ -363,23 +363,23 @@
   "allCats": {
     "meta": {
       "title": "All Cats | BleuRoi Cattery Bulgaria",
-      "description": "Browse all our pedigree Ragdoll and British Longhair cats from licensed breeder BleuRoi."
+      "description": "Browse all our pedigree Ragdoll, British Longhair & British Shorthair cats from licensed breeder BleuRoi."
     },
     "title": "All Our Cats",
-    "subtitle": "Ragdoll and British Longhair cats from licensed breeder BleuRoi"
+    "subtitle": "Ragdoll, British Longhair & British Shorthair cats from licensed breeder BleuRoi"
   },
   "british": {
     "meta": {
-      "title": "British Longhair Cats for Sale | BleuRoi Cattery Bulgaria",
-      "description": "Buy pedigree British Longhair kittens from licensed breeder BleuRoi. Beautiful, calm, and majestic cats with full documentation and health guarantees.",
-      "keywords": "british longhair cats, british longhair kittens for sale, pedigree british cats, british longhair breeder, british longhair cattery"
+      "title": "British Longhair & British Shorthair Cats for Sale | BleuRoi Cattery Bulgaria",
+      "description": "Buy pedigree British Longhair & British Shorthair kittens from licensed breeder BleuRoi. Beautiful, calm, and majestic cats with full documentation and health guarantees.",
+      "keywords": "british longhair cats, british shorthair cats, british longhair kittens for sale, british shorthair kittens for sale, pedigree british cats, british longhair breeder, british shorthair breeder, british cattery"
     },
-    "heroTitle": "British Longhair",
+    "heroTitle": "British Longhair & British Shorthair",
     "heroSubtitle": "Majestic pedigree cats with aristocratic character from licensed breeder BleuRoi",
     "heroCta": "View Our Cats",
     "seoIntro": {
-      "title": "Your Trusted British Longhair Breeder in Bulgaria",
-      "paragraph1": "Looking for a <strong>British Longhair cat for sale</strong> with European quality and guarantee? BleuRoi is a <strong>licensed pedigree cat breeder</strong> with pedigree papers, European passport, 2 vaccinations, and microchip. We offer <strong>British Longhair kittens</strong> from champion parents.",
+      "title": "Your Trusted British Longhair & British Shorthair Breeder in Bulgaria",
+      "paragraph1": "Looking for a <strong>British Longhair or British Shorthair cat for sale</strong> with European quality and guarantee? BleuRoi is a <strong>licensed pedigree cat breeder</strong> with pedigree papers, European passport, 2 vaccinations, and microchip. We offer <strong>British Longhair & British Shorthair kittens</strong> from champion parents.",
       "paragraph2": "Our <strong>British kittens</strong> are perfect for families – <strong>calm, independent, and suitable for children</strong>. Every <strong>pedigree kitten</strong> is raised with love and professional care. We have <strong>pedigree cats for sale</strong> year-round – for pets, shows, and licensed breeding.",
       "feature1Title": "FIFe/WCF Pedigree",
       "feature1Desc": "All kittens with official pedigree from internationally recognized organizations",
@@ -390,18 +390,18 @@
       "license": "License 47090/2024"
     },
     "featuredModels": {
-      "title": "Our British Longhair Cats",
+      "title": "Our British Longhair & British Shorthair Cats",
       "sectionTitles": {
         "male": "Males",
         "female": "Females",
         "kitten": "Kittens (Under 1 Year)"
       },
       "loading": "Loading cats...",
-      "noAvailable": "No British Longhair cats available at this time"
+      "noAvailable": "No British Longhair & British Shorthair cats available at this time"
     },
     "faq": {
-      "title": "Frequently Asked Questions About British Longhair Cats",
-      "subtitle": "Everything you need to know about buying a British Longhair kitten from BleuRoi",
+      "title": "Frequently Asked Questions About British Longhair & British Shorthair Cats",
+      "subtitle": "Everything you need to know about buying a British Longhair & British Shorthair kitten from BleuRoi",
       "items": [
         {
           "question": "How much does a British Longhair kitten cost?",
