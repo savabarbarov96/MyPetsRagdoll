@@ -5,7 +5,6 @@ import { useActiveSection, useScrollPosition } from "@/hooks/useScrollAnimation"
 import SocialContactModal from "./SocialContactModal";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/hooks/useLanguage";
-import ragdollLogo from "@/assets/ragdoll-logo.png";
 
 const ModernNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,9 +56,13 @@ const ModernNavigation = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <img 
-              src={ragdollLogo} 
-              alt="My Pets Ragdoll Logo" 
-              className="w-20 h-20 object-contain"
+              src="/bleuroi-logo-nav.webp"
+              alt="BleuRoi Ragdoll Logo"
+              width={384}
+              height={357}
+              loading="eager"
+              decoding="async"
+              className="h-[88px] w-[96px] md:h-[92px] md:w-[100px] object-contain"
             />
           </div>
 

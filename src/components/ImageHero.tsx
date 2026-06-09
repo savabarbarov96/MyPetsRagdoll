@@ -24,14 +24,29 @@ const ImageHero = () => {
     <section className="relative h-screen w-full overflow-hidden bg-black">
       {/* Image Background with letterboxing */}
       <div className="absolute inset-0 z-0 flex items-center justify-center bg-black">
-        <img
-          src="/british-herosection.jpg"
-          alt="BleuRoi Ragdoll & British Cattery - Champion cats Bulgaria"
-          className={`max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-700 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
-        />
+        <picture className="max-w-full max-h-full">
+          <source
+            media="(max-width: 767px)"
+            srcSet="/bleuroi-main-screen-960.webp"
+            type="image/webp"
+          />
+          <source
+            srcSet="/bleuroi-main-screen.webp"
+            type="image/webp"
+          />
+          <img
+            src="/bleuroi-main-screen.jpg"
+            alt="BleuRoi Ragdoll & British Cattery - Champion cats Bulgaria"
+            width={1441}
+            height={1801}
+            loading="eager"
+            decoding="async"
+            className={`max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-700 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImageLoaded(true)}
+          />
+        </picture>
 
         {/* Light overlay only at the bottom for button readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10" />
