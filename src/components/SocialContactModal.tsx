@@ -34,7 +34,7 @@ const SocialContactModal = ({ cat, isOpen, onClose }: SocialContactModalProps) =
     {
       name: 'Instagram',
       icon: Instagram,
-      url: socialSettings?.instagram_url || 'https://instagram.com/radanovpride',
+      url: socialSettings?.instagram_url || 'https://www.instagram.com/bleuroi_cattery_ragdol_british/',
       color: 'bg-pink-600 hover:bg-pink-700',
     },
     {

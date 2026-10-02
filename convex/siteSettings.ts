@@ -305,7 +305,7 @@ export const initializeDefaultSettings = mutation({
       },
       {
         key: "instagram_url", 
-        value: "https://instagram.com/radanovpride",
+        value: "https://www.instagram.com/bleuroi_cattery_ragdol_british/",
         type: "social_media" as const,
         description: "Instagram profile URL",
       },

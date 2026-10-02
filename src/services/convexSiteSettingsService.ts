@@ -16,7 +16,15 @@ export const useSettingByKey = (key: string) => {
 };
 
 export const useSocialMediaSettings = () => {
-  return useQuery(api.siteSettings.getSocialMediaSettings);
+  const settings = useQuery(api.siteSettings.getSocialMediaSettings);
+  if (!settings) return settings;
+
+  // Replace legacy profile URLs already stored in site settings.
+  const instagramUrl = settings.instagram_url?.replace(
+    /^https?:\/\/(?:www\.)?instagram\.com\/(?:radanovpride|bleuroi\.ragdoll)\/?(?:\?.*)?$/i,
+    "https://www.instagram.com/bleuroi_cattery_ragdol_british/",
+  );
+  return { ...settings, instagram_url: instagramUrl };
 };
 
 export const useLocationSettings = () => {

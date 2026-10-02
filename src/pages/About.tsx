@@ -127,7 +127,7 @@ const About = () => {
             },
             "sameAs": [
               "https://www.facebook.com/bleuroi.ragdoll",
-              "https://www.instagram.com/bleuroi.ragdoll",
+              "https://www.instagram.com/bleuroi_cattery_ragdol_british/",
               "https://www.tiktok.com/@bleuroi.ragdol.cattery"
             ]
           })}

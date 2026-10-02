@@ -240,7 +240,7 @@ const SocialMediaSettings = () => {
                     type="url"
                     value={formData.instagram}
                     onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
-                    placeholder="https://instagram.com/radanovpride"
+                    placeholder="https://www.instagram.com/bleuroi_cattery_ragdol_british/"
                     className="w-full min-h-[44px]"
                   />
                   <p className="text-xs text-muted-foreground">

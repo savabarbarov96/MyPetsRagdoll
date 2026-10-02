@@ -8,7 +8,7 @@ const Footer = () => {
   const { t } = useLanguage();
   const socialSettings = useSocialMediaSettings();
   const facebookUrl = socialSettings?.facebook_url || 'https://www.facebook.com/Bleuroi.Ragdol.Cattery';
-  const instagramUrl = socialSettings?.instagram_url || 'https://instagram.com/radanovpride';
+  const instagramUrl = socialSettings?.instagram_url || 'https://www.instagram.com/bleuroi_cattery_ragdol_british/';
   const tiktokUrl = socialSettings?.tiktok_url || 'https://www.tiktok.com/@blueroi.ragdol.cattery';
   return (
     <footer className="bg-black text-white py-8">
