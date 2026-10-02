@@ -11,4 +11,7 @@ crons.daily(
   {} // Empty args object - the function will use today's date by default
 );
 
+// Remove expired anti-abuse counters only; no customer/contact/content records are changed.
+crons.interval("clean expired submission counters", { hours: 1 }, internal.auth.cleanupSubmissionLimits, {});
+
 export default crons;

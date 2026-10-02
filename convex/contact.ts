@@ -1,3 +1,4 @@
+import { requireAdmin } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
@@ -22,7 +23,10 @@ export const submitContact = mutation({
 
 // Get all contact submissions (admin)
 export const getAllContacts = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("contactSubmissions")
       .order("desc")
@@ -32,7 +36,7 @@ export const getAllContacts = query({
 
 // Get contacts by status
 export const getContactsByStatus = query({
-  args: { 
+  args: { sessionId: v.string(),
     status: v.union(
       v.literal("new"), 
       v.literal("read"), 
@@ -40,9 +44,11 @@ export const getContactsByStatus = query({
     ) 
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("contactSubmissions")
-      .withIndex("by_status", (q) => q.eq("status", args.status))
+      .withIndex("by_status", (q) => q.eq("status", input.status))
       .order("desc")
       .collect();
   },
@@ -50,7 +56,7 @@ export const getContactsByStatus = query({
 
 // Update contact status
 export const updateContactStatus = mutation({
-  args: {
+  args: { sessionId: v.string(),
     contactId: v.id("contactSubmissions"),
     status: v.union(
       v.literal("new"), 
@@ -59,41 +65,52 @@ export const updateContactStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.contactId, { status: args.status });
-    return await ctx.db.get(args.contactId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.patch(input.contactId, { status: input.status });
+    return await ctx.db.get(input.contactId);
   },
 });
 
 // Mark contact as read
 export const markContactAsRead = mutation({
-  args: { contactId: v.id("contactSubmissions") },
+  args: { sessionId: v.string(), contactId: v.id("contactSubmissions") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.contactId, { status: "read" });
-    return await ctx.db.get(args.contactId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.patch(input.contactId, { status: "read" });
+    return await ctx.db.get(input.contactId);
   },
 });
 
 // Mark contact as replied
 export const markContactAsReplied = mutation({
-  args: { contactId: v.id("contactSubmissions") },
+  args: { sessionId: v.string(), contactId: v.id("contactSubmissions") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.contactId, { status: "replied" });
-    return await ctx.db.get(args.contactId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.patch(input.contactId, { status: "replied" });
+    return await ctx.db.get(input.contactId);
   },
 });
 
 // Delete contact submission
 export const deleteContact = mutation({
-  args: { contactId: v.id("contactSubmissions") },
+  args: { sessionId: v.string(), contactId: v.id("contactSubmissions") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.contactId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.contactId);
     return { success: true };
   },
 });
 
 // Get contact statistics
 export const getContactStatistics = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const allContacts = await ctx.db.query("contactSubmissions").collect();
     
     const newContacts = allContacts.filter(c => c.status === "new");
@@ -113,7 +130,7 @@ export const getContactStatistics = query({
 
 // Bulk update contact status
 export const bulkUpdateContactStatus = mutation({
-  args: {
+  args: { sessionId: v.string(),
     contactIds: v.array(v.id("contactSubmissions")),
     status: v.union(
       v.literal("new"), 
@@ -122,10 +139,12 @@ export const bulkUpdateContactStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const results = [];
     
-    for (const contactId of args.contactIds) {
-      await ctx.db.patch(contactId, { status: args.status });
+    for (const contactId of input.contactIds) {
+      await ctx.db.patch(contactId, { status: input.status });
       const updatedContact = await ctx.db.get(contactId);
       results.push(updatedContact);
     }

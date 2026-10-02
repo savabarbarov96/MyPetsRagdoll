@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { GlowButton, RippleButton, BounceButton } from '@/components/ui/animated-button';
 import { Plus, Edit, Trash2, Save, Eye, Calendar, FileText } from 'lucide-react';
-import { useMutation, useQuery } from "convex/react";
+import { useAdminMutation as useMutation, useAdminQuery as useQuery } from "@/lib/adminConvex";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useToast } from '@/hooks/use-toast';
@@ -293,7 +293,6 @@ const NewsManager = () => {
                   uploadOptions={{
                     imageType: 'news',
                     maxSizeInMB: 5,
-                    quality: 0.8
                   }}
                   previewSize="medium"
                 />
@@ -350,7 +349,6 @@ const NewsManager = () => {
                       uploadOptions={{
                         imageType: 'news',
                         maxSizeInMB: 5,
-                        quality: 0.8
                       }}
                       previewSize="small"
                     />

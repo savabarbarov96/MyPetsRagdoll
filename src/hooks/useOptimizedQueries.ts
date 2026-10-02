@@ -53,20 +53,20 @@ export const useOptimizedQueries = () => {
 /**
  * Hook for lazy-loaded gallery data that only fetches when needed
  */
-export const useLazyGalleryData = (category: string = "all", enabled: boolean = false) => {
+export const useLazyGalleryData = (category: "all" | "award" | "certificate" | "photo" | "trophy" | "achievement" = "all", enabled: boolean = false) => {
   return useQuery(
     api.gallery.getPublishedGalleryItems,
-    enabled && category !== "all" ? { category } : {}
+    enabled ? (category !== "all" ? { category } : {}) : "skip"
   );
 };
 
 /**
  * Hook for lazy-loaded cat data with pagination
  */
-export const useLazyCatData = (category: string = "all", enabled: boolean = false, limit: number = 6) => {
+export const useLazyCatData = (category: "all" | "adult" | "kitten" = "all", enabled: boolean = false, limit: number = 6) => {
   return useQuery(
     api.cats.getDisplayedCatsByCategory,
-    { category, limit }
+    enabled ? { category } : "skip"
   );
 };
 

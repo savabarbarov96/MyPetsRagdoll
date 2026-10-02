@@ -1,91 +1,51 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import News from "./pages/News";
-import NewsArticle from "./pages/NewsArticle";
-import CatRedirect from "./pages/CatRedirect";
-import British from "./pages/British";
-import AllCats from "./pages/AllCats";
-import Analytics from "./components/Analytics";
-import VisitorTracker from "./components/VisitorTracker";
-import { LocationBasedTheme } from "@/hooks/useTheme";
+import { lazy, Suspense } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { LanguageProvider, useLanguage } from "@/hooks/useLanguage";
-import PerformanceOptimizer from "./components/PerformanceOptimizer";
-import { ImagePreloader, CRITICAL_IMAGES, BackgroundImagePreloader } from "./components/ImagePreloader";
-import { useCriticalImagePreloader } from "@/hooks/useImagePreloader";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { LanguageProvider, useLanguage } from '@/hooks/useLanguage';
+import { ConsentProvider, CookieConsent, useConsent } from '@/components/privacy/ConsentProvider';
+import { PublicLayout } from '@/components/site/PublicLayout';
+import { HomePage, BritishPage, AllCatsPage, AboutPage, NewsPage, NewsArticlePage, CatPage, PublicNotFoundPage } from '@/pages/PublicPages';
+import { TrustPage, ContactPage, WaitingListPage, TermsPage, PrivacyPage } from '@/pages/InformationPages';
+import Analytics from '@/components/Analytics';
+import VisitorTracker from '@/components/VisitorTracker';
+import '@/styles/public.css';
 
-// Additional images to preload in background after critical images
-const BACKGROUND_IMAGES = [
-  '/featured-cat-1.jpg',
-  '/featured-cat-2.jpg',
-  '/model-cat-1.jpg',
-  '/model-cat-2.jpg',
-  '/model-cat-3.jpg'
-];
-
-const AppContent = () => {
-  const { t } = useLanguage();
-  const { isLoading } = useCriticalImagePreloader(CRITICAL_IMAGES);
-  
-  return (
-    <>
-      <Toaster />
-      <Sonner />
-      <Analytics />
-      <VisitorTracker />
-      <PerformanceOptimizer />
-
-      {/* Preload critical images with loading UI */}
-      <ImagePreloader
-        criticalImages={CRITICAL_IMAGES}
-        showProgress={isLoading}
-      />
-
-      {/* Background preload non-critical images */}
-      <BackgroundImagePreloader images={BACKGROUND_IMAGES} />
-      
-      <Helmet>
-        <title>{t('meta.title')}</title>
-        <meta name="description" content={t('meta.description')} />
-        {/* Preload critical images via link tags for browsers that support it */}
-        {CRITICAL_IMAGES.map((src) => (
-          <link 
-            key={src} 
-            rel="preload" 
-            as="image" 
-            href={src}
-            fetchPriority="high"
-          />
-        ))}
-      </Helmet>
-      
-      <LocationBasedTheme>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/news/:slug" element={<NewsArticle />} />
-          <Route path="/british" element={<British />} />
-          <Route path="/all-cats" element={<AllCats />} />
-          <Route path="/cat/:catId" element={<CatRedirect />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </LocationBasedTheme>
-    </>
-  );
-};
-
-const App = () => (
-  <LanguageProvider>
-    <AppContent />
-  </LanguageProvider>
-);
-
-export default App;
+const Admin = lazy(() => import('@/pages/Admin'));
+function AppContent() {
+  const { language } = useLanguage();
+  const consent = useConsent();
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
+  return <>
+    <Helmet htmlAttributes={{ lang: language, class: isAdmin ? 'light' : 'light public-theme' }} />
+    <Toaster /><Sonner />
+    {!isAdmin && (consent.analytics || consent.marketing) && <Analytics />}
+    {!isAdmin && consent.analytics && <VisitorTracker />}
+    <Suspense fallback={<div className="p-8" role="status">{language === 'bg' ? 'Зареждане…' : 'Loading…'}</div>}>
+      <Routes>
+        <Route path="/admin" element={<><Helmet><meta name="robots" content="noindex,nofollow" /></Helmet><Admin /></>} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/british" element={<BritishPage />} />
+          <Route path="/all-cats" element={<AllCatsPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/news/:slug" element={<NewsArticlePage />} />
+          <Route path="/cat/:catId" element={<CatPage />} />
+          <Route path="/trust" element={<TrustPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/waiting-list" element={<WaitingListPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="*" element={<PublicNotFoundPage />} />
+        </Route>
+      </Routes>
+    </Suspense>
+    {!isAdmin && <CookieConsent />}
+  </>;
+}
+export default function App() {
+  return <LanguageProvider><ConsentProvider><AppContent /></ConsentProvider></LanguageProvider>;
+}

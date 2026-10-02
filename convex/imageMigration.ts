@@ -1,8 +1,7 @@
 import { v } from "convex/values";
-import { action, internalMutation, internalAction, internalQuery } from "./_generated/server";
+import { internalMutation, internalAction, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { api } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
 // Define the image mapping for migration
 const IMAGE_MAPPINGS = [
@@ -26,6 +25,25 @@ const IMAGE_MAPPINGS = [
   { localPath: "/hero-cats-modern.jpg", filename: "hero-cats-modern.jpg", type: "general" as const },
   { localPath: "/hero-maine-coon.jpg", filename: "hero-maine-coon.jpg", type: "general" as const },
 ];
+
+
+interface UploadResult {
+  success: boolean; filename: string; storageId?: Id<"_storage">; storageUrl?: string;
+  imageId?: Id<"images">; originalPath: string; error?: string;
+}
+interface MigrationResult {
+  total: number; successful: number; failed: number;
+  results: Array<UploadResult & { mapping: (typeof IMAGE_MAPPINGS)[number] }>;
+  urlMappings: Record<string, string>;
+}
+interface UpdateResult {
+  updatedCount: number; totalCats: number;
+  updatedCats: Array<{ id: Id<"cats">; name: string; oldImage: string; newImage: string; oldGallery: string[]; newGallery: string[] }>;
+}
+interface MigrationStatus {
+  totalCats: number; catsWithLocalPaths: number; allMigrated: boolean;
+  catsNeedingMigration: Array<{ id: Id<"cats">; name: string; hasLocalImage: boolean; hasLocalGallery: boolean; localImage: string | null; localGalleryImages: string[] }>;
+}
 
 // Upload a single image from a public URL or local path
 export const uploadImageFromUrl = internalAction({
@@ -105,10 +123,10 @@ export const migrateAllImages = internalAction({
     total: number;
     successful: number;
     failed: number;
-    results: any[];
+    results: MigrationResult["results"];
     urlMappings: Record<string, string>;
   }> => {
-    const results: any[] = [];
+    const results: MigrationResult["results"] = [];
     
     console.log(`Starting migration of ${IMAGE_MAPPINGS.length} images...`);
     
@@ -142,7 +160,7 @@ export const migrateAllImages = internalAction({
       successful: successful.length,
       failed: failed.length,
       results: results,
-      urlMappings: successful.reduce((acc: Record<string, string>, result: any) => {
+      urlMappings: successful.reduce((acc: Record<string, string>, result: UploadResult) => {
         if (result.storageUrl && result.originalPath) {
           acc[result.originalPath] = result.storageUrl;
         }
@@ -155,7 +173,7 @@ export const migrateAllImages = internalAction({
 // Update cat records to use new storage URLs
 export const updateCatImagesWithStorageUrls = internalMutation({
   args: {
-    urlMappings: v.any() // Record<string, string> - maps old paths to new URLs
+    urlMappings: v.record(v.string(), v.string()) // Record<string, string> - maps old paths to new URLs
   },
   handler: async (ctx, args) => {
     const cats = await ctx.db.query("cats").collect();
@@ -207,10 +225,11 @@ export const updateCatImagesWithStorageUrls = internalMutation({
 });
 
 // Complete migration workflow
-export const runFullImageMigration = action({
-  handler: async (ctx): Promise<{
-    uploadResults: any;
-    updateResults: any;
+export const runFullImageMigration = internalAction({
+  args: {},
+  handler: async (ctx, args): Promise<{
+    uploadResults: MigrationResult;
+    updateResults: UpdateResult;
     summary: {
       imagesUploaded: number;
       imagesFailed: number;
@@ -221,14 +240,14 @@ export const runFullImageMigration = action({
     console.log("Starting full image migration...");
     
     // Step 1: Upload all images to Convex storage
-    const uploadResults: any = await ctx.runAction(internal.imageMigration.migrateAllImages);
+    const uploadResults: MigrationResult = await ctx.runAction(internal.imageMigration.migrateAllImages);
     
     if (uploadResults.failed > 0) {
       console.warn(`${uploadResults.failed} images failed to upload. Continuing with partial migration...`);
     }
     
     // Step 2: Update cat records with new storage URLs
-    const updateResults: any = await ctx.runMutation(internal.imageMigration.updateCatImagesWithStorageUrls, {
+    const updateResults: UpdateResult = await ctx.runMutation(internal.imageMigration.updateCatImagesWithStorageUrls, {
       urlMappings: uploadResults.urlMappings
     });
     
@@ -248,15 +267,16 @@ export const runFullImageMigration = action({
 });
 
 // Get migration status - check which images are still using local paths
-export const getMigrationStatus = action({
-  handler: async (ctx): Promise<{
+export const getMigrationStatus = internalAction({
+  args: {},
+  handler: async (ctx, args): Promise<{
     totalCats: number;
     catsWithLocalPaths: number;
     allMigrated: boolean;
-    catsNeedingMigration: any[];
+    catsNeedingMigration: MigrationStatus["catsNeedingMigration"];
   }> => {
-    const cats: any = await ctx.runQuery(api.cats.getAllCats);
-    const localPathCats: any[] = [];
+    const cats: Doc<"cats">[] = await ctx.runQuery(internal.imageMigration.getMigrationCats, {});
+    const localPathCats: MigrationStatus["catsNeedingMigration"] = [];
     
     for (const cat of cats) {
       const hasLocalImage = cat.image.startsWith('/') && !cat.image.startsWith('http');
@@ -281,4 +301,5 @@ export const getMigrationStatus = action({
       catsNeedingMigration: localPathCats
     };
   },
-}); 
+});
+export const getMigrationCats = internalQuery({ args: {}, handler: async ctx => ctx.db.query("cats").collect() });

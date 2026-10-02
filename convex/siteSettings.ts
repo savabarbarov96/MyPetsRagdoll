@@ -1,17 +1,22 @@
+import { requireAdmin } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // Get all site settings
 export const getAllSettings = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db.query("siteSettings").collect();
   },
 });
 
 // Get settings by type
 export const getSettingsByType = query({
-  args: { type: v.union(v.literal("social_media"), v.literal("contact_info"), v.literal("site_content"), v.literal("feature_toggle"), v.literal("analytics"), v.literal("seo"), v.literal("location")) },
+  args: { sessionId: v.string(), type: v.union(v.literal("social_media"), v.literal("contact_info"), v.literal("site_content"), v.literal("feature_toggle"), v.literal("analytics"), v.literal("seo"), v.literal("location")) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
     return await ctx.db
       .query("siteSettings")
       .withIndex("by_type", (q) => q.eq("type", args.type))
@@ -21,8 +26,9 @@ export const getSettingsByType = query({
 
 // Get setting by key
 export const getSettingByKey = query({
-  args: { key: v.string() },
+  args: { sessionId: v.string(), key: v.string() },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
     return await ctx.db
       .query("siteSettings")
       .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -39,10 +45,11 @@ export const getSocialMediaSettings = query({
       .collect();
     
     // Convert to key-value object
-    const socialMedia: Record<string, unknown> = {};
-    settings.forEach(setting => {
+    const socialMedia: Record<string, string> = {};
+    settings.filter(setting => ["facebook_url", "instagram_url", "tiktok_url"].includes(setting.key)).forEach(setting => {
       try {
-        socialMedia[setting.key] = JSON.parse(setting.value);
+        const value: unknown = JSON.parse(setting.value);
+        if (typeof value === "string") socialMedia[setting.key] = value;
       } catch {
         socialMedia[setting.key] = setting.value;
       }
@@ -54,27 +61,29 @@ export const getSocialMediaSettings = query({
 
 // Create or update setting
 export const upsertSetting = mutation({
-  args: {
+  args: { sessionId: v.string(),
     key: v.string(),
     value: v.string(),
     type: v.union(v.literal("social_media"), v.literal("contact_info"), v.literal("site_content"), v.literal("feature_toggle"), v.literal("analytics"), v.literal("seo"), v.literal("location")),
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const existing = await ctx.db
       .query("siteSettings")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("by_key", (q) => q.eq("key", input.key))
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
-        value: args.value,
-        type: args.type,
-        description: args.description,
+        value: input.value,
+        type: input.type,
+        description: input.description,
       });
       return await ctx.db.get(existing._id);
     } else {
-      const settingId = await ctx.db.insert("siteSettings", args);
+      const settingId = await ctx.db.insert("siteSettings", input);
       return await ctx.db.get(settingId);
     }
   },
@@ -104,7 +113,7 @@ export const getLocationSettings = query({
 
 // Update location settings (batch update)
 export const updateLocationSettings = mutation({
-  args: {
+  args: { sessionId: v.string(),
     address: v.optional(v.string()),
     coordinates: v.optional(v.string()), // JSON string: {lat: number, lng: number}
     googleMapsUrl: v.optional(v.string()),
@@ -112,20 +121,22 @@ export const updateLocationSettings = mutation({
     displayName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const updates = [];
 
-    if (args.address !== undefined) {
+    if (input.address !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "establishment_address"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.address });
+        await ctx.db.patch(result._id, { value: input.address });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "establishment_address",
-          value: args.address,
+          value: input.address,
           type: "location",
           description: "Physical address of the establishment"
         });
@@ -133,18 +144,18 @@ export const updateLocationSettings = mutation({
       updates.push("establishment_address");
     }
 
-    if (args.coordinates !== undefined) {
+    if (input.coordinates !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "establishment_coordinates"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.coordinates });
+        await ctx.db.patch(result._id, { value: input.coordinates });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "establishment_coordinates",
-          value: args.coordinates,
+          value: input.coordinates,
           type: "location",
           description: "GPS coordinates (lat, lng) as JSON"
         });
@@ -152,18 +163,18 @@ export const updateLocationSettings = mutation({
       updates.push("establishment_coordinates");
     }
 
-    if (args.googleMapsUrl !== undefined) {
+    if (input.googleMapsUrl !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "google_maps_url"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.googleMapsUrl });
+        await ctx.db.patch(result._id, { value: input.googleMapsUrl });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "google_maps_url",
-          value: args.googleMapsUrl,
+          value: input.googleMapsUrl,
           type: "location",
           description: "Custom Google Maps URL"
         });
@@ -171,18 +182,18 @@ export const updateLocationSettings = mutation({
       updates.push("google_maps_url");
     }
 
-    if (args.appleMapsUrl !== undefined) {
+    if (input.appleMapsUrl !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "apple_maps_url"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.appleMapsUrl });
+        await ctx.db.patch(result._id, { value: input.appleMapsUrl });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "apple_maps_url",
-          value: args.appleMapsUrl,
+          value: input.appleMapsUrl,
           type: "location",
           description: "Custom Apple Maps URL"
         });
@@ -190,18 +201,18 @@ export const updateLocationSettings = mutation({
       updates.push("apple_maps_url");
     }
 
-    if (args.displayName !== undefined) {
+    if (input.displayName !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "location_display_name"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.displayName });
+        await ctx.db.patch(result._id, { value: input.displayName });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "location_display_name",
-          value: args.displayName,
+          value: input.displayName,
           type: "location",
           description: "Display name for the location"
         });
@@ -215,26 +226,28 @@ export const updateLocationSettings = mutation({
 
 // Update social media settings (batch update)
 export const updateSocialMediaSettings = mutation({
-  args: {
+  args: { sessionId: v.string(),
     facebook: v.optional(v.string()),
     instagram: v.optional(v.string()),
     tiktok: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const updates = [];
 
-    if (args.facebook !== undefined) {
+    if (input.facebook !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "facebook_url"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.facebook });
+        await ctx.db.patch(result._id, { value: input.facebook });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "facebook_url",
-          value: args.facebook,
+          value: input.facebook,
           type: "social_media",
           description: "Facebook page URL",
         });
@@ -242,18 +255,18 @@ export const updateSocialMediaSettings = mutation({
       updates.push("facebook");
     }
 
-    if (args.instagram !== undefined) {
+    if (input.instagram !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "instagram_url"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.instagram });
+        await ctx.db.patch(result._id, { value: input.instagram });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "instagram_url",
-          value: args.instagram,
+          value: input.instagram,
           type: "social_media",
           description: "Instagram profile URL",
         });
@@ -261,18 +274,18 @@ export const updateSocialMediaSettings = mutation({
       updates.push("instagram");
     }
 
-    if (args.tiktok !== undefined) {
+    if (input.tiktok !== undefined) {
       const result = await ctx.db
         .query("siteSettings")
         .withIndex("by_key", (q) => q.eq("key", "tiktok_url"))
         .first();
 
       if (result) {
-        await ctx.db.patch(result._id, { value: args.tiktok });
+        await ctx.db.patch(result._id, { value: input.tiktok });
       } else {
         await ctx.db.insert("siteSettings", {
           key: "tiktok_url",
-          value: args.tiktok,
+          value: input.tiktok,
           type: "social_media",
           description: "TikTok profile URL",
         });
@@ -286,16 +299,21 @@ export const updateSocialMediaSettings = mutation({
 
 // Delete setting
 export const deleteSetting = mutation({
-  args: { id: v.id("siteSettings") },
+  args: { sessionId: v.string(), id: v.id("siteSettings") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.id);
     return { success: true };
   },
 });
 
 // Initialize default settings (useful for first-time setup)
 export const initializeDefaultSettings = mutation({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const defaults = [
       {
         key: "facebook_url",
@@ -331,5 +349,12 @@ export const initializeDefaultSettings = mutation({
     }
 
     return results;
+  },
+});
+export const getPublicTrackingSettings = query({
+  args: {},
+  handler: async ctx => {
+    const settings = await ctx.db.query("siteSettings").withIndex("by_type", q => q.eq("type", "analytics")).collect();
+    return settings.filter(s => ["google_analytics_id", "meta_pixel_id", "google_search_console"].includes(s.key));
   },
 });

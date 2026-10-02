@@ -1,3 +1,4 @@
+import { requireAdmin } from "./lib/admin";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
@@ -38,7 +39,10 @@ export const getActiveHeroVideo = query({
 
 // Get all hero videos (for admin management) with resolved URLs
 export const getAllHeroVideos = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const videos = await ctx.db
       .query("heroVideos")
       .withIndex("by_uploaded", (q) => q)
@@ -76,7 +80,7 @@ export const getAllHeroVideos = query({
 
 // Add a new hero video
 export const addHeroVideo = mutation({
-  args: {
+  args: { sessionId: v.string(),
     src: v.string(),
     thumbnailSrc: v.optional(v.string()),
     alt: v.string(),
@@ -90,20 +94,22 @@ export const addHeroVideo = mutation({
     shouldMute: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const videoId = await ctx.db.insert("heroVideos", {
-      src: args.src,
-      thumbnailSrc: args.thumbnailSrc,
-      alt: args.alt,
-      title: args.title,
-      description: args.description,
+      src: input.src,
+      thumbnailSrc: input.thumbnailSrc,
+      alt: input.alt,
+      title: input.title,
+      description: input.description,
       isActive: false, // New videos are inactive by default
-      duration: args.duration,
-      fileSize: args.fileSize,
-      format: args.format,
+      duration: input.duration,
+      fileSize: input.fileSize,
+      format: input.format,
       uploadedAt: Date.now(),
-      shouldAutoplay: args.shouldAutoplay ?? true,
-      shouldLoop: args.shouldLoop ?? true,
-      shouldMute: args.shouldMute ?? true,
+      shouldAutoplay: input.shouldAutoplay ?? true,
+      shouldLoop: input.shouldLoop ?? true,
+      shouldMute: input.shouldMute ?? true,
     });
 
     return videoId;
@@ -112,9 +118,11 @@ export const addHeroVideo = mutation({
 
 // Toggle a video's active status
 export const toggleVideoActive = mutation({
-  args: { id: v.id("heroVideos") },
+  args: { sessionId: v.string(), id: v.id("heroVideos") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const video = await ctx.db.get(input.id);
     if (!video) {
       throw new Error("Video not found");
     }
@@ -133,7 +141,7 @@ export const toggleVideoActive = mutation({
     }
 
     // Toggle the target video
-    await ctx.db.patch(args.id, { isActive: !video.isActive });
+    await ctx.db.patch(input.id, { isActive: !video.isActive });
 
     return { success: true };
   },
@@ -141,7 +149,7 @@ export const toggleVideoActive = mutation({
 
 // Update video settings
 export const updateVideoSettings = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("heroVideos"),
     alt: v.optional(v.string()),
     title: v.optional(v.string()),
@@ -151,7 +159,9 @@ export const updateVideoSettings = mutation({
     shouldMute: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updates } = input;
     
     // Filter out undefined values
     const cleanUpdates = Object.fromEntries(
@@ -169,21 +179,26 @@ export const updateVideoSettings = mutation({
 
 // Delete a hero video
 export const deleteHeroVideo = mutation({
-  args: { id: v.id("heroVideos") },
+  args: { sessionId: v.string(), id: v.id("heroVideos") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const video = await ctx.db.get(input.id);
     if (!video) {
       throw new Error("Video not found");
     }
 
-    await ctx.db.delete(args.id);
+    await ctx.db.delete(input.id);
     return { success: true };
   },
 });
 
 // Get video statistics (for admin dashboard)
 export const getVideoStats = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const allVideos = await ctx.db.query("heroVideos").collect();
     const activeVideos = allVideos.filter(video => video.isActive);
     
@@ -203,9 +218,11 @@ export const getVideoStats = query({
 
 // Activate a specific video by ID (deactivates others)
 export const activateVideo = mutation({
-  args: { id: v.id("heroVideos") },
+  args: { sessionId: v.string(), id: v.id("heroVideos") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const video = await ctx.db.get(input.id);
     if (!video) {
       throw new Error("Video not found");
     }
@@ -221,7 +238,7 @@ export const activateVideo = mutation({
     }
 
     // Activate the target video
-    await ctx.db.patch(args.id, { isActive: true });
+    await ctx.db.patch(input.id, { isActive: true });
 
     return { success: true };
   },

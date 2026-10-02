@@ -146,7 +146,6 @@ export const PerformanceOptimizer: React.FC = () => {
 
     // 7. Memory cleanup for long-running sessions
     const setupMemoryCleanup = () => {
-      let cleanupInterval: NodeJS.Timeout;
       
       const cleanup = () => {
         // Remove inactive event listeners
@@ -161,7 +160,7 @@ export const PerformanceOptimizer: React.FC = () => {
         }
       };
 
-      cleanupInterval = setInterval(cleanup, 300000); // Every 5 minutes
+      const cleanupInterval = setInterval(cleanup, 300000); // Every 5 minutes
 
       return () => clearInterval(cleanupInterval);
     };
@@ -205,8 +204,8 @@ export const PerformanceOptimizer: React.FC = () => {
           }
           
           // Log layout shifts
-          if (entry.entryType === 'layout-shift' && !entry.hadRecentInput) {
-            console.warn('Layout shift detected:', entry.value);
+          if (entry.entryType === 'layout-shift' && !(entry as PerformanceEntry & { hadRecentInput: boolean }).hadRecentInput) {
+            console.warn('Layout shift detected:', (entry as PerformanceEntry & { value: number }).value);
           }
         });
       });

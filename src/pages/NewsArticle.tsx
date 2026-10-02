@@ -313,7 +313,7 @@ const NewsArticle = () => {
                             </h3>
                             
                             <p className="text-muted-foreground text-sm line-clamp-2 mt-2">
-                              {relatedArticle.content}
+                              {('content' in relatedArticle ? relatedArticle.content : '')}
                             </p>
 
                             <div className="flex items-center text-primary text-xs font-medium mt-3 group-hover:gap-1 transition-all duration-200">

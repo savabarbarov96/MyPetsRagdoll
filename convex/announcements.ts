@@ -1,10 +1,14 @@
+import { requireAdmin, findAdminSession } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 
 // Get all announcements
 export const getAllAnnouncements = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("announcements")
       .withIndex("by_sort_order", (q) => q.gt("sortOrder", -1))
@@ -59,9 +63,10 @@ export const getLatestAnnouncements = query({
 
 // Get announcement by ID
 export const getAnnouncementById = query({
-  args: { id: v.id("announcements") },
+  args: { sessionId: v.optional(v.string()), id: v.id("announcements") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const record = await ctx.db.get(args.id);
+    return record && (record.isPublished || await findAdminSession(ctx, args.sessionId)) ? record : null;
   },
 });
 
@@ -69,11 +74,17 @@ export const getAnnouncementById = query({
 export const getAnnouncementBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const bySlug = await ctx.db
       .query("announcements")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .filter((q) => q.eq(q.field("isPublished"), true))
       .first();
+    if (bySlug) return bySlug;
+    // Historical article links used document IDs when no slug was stored.
+    const id = ctx.db.normalizeId("announcements", args.slug);
+    if (!id) return null;
+    const article = await ctx.db.get(id);
+    return article?.isPublished ? article : null;
   },
 });
 
@@ -89,7 +100,7 @@ const generateSlug = (title: string): string => {
 
 // Create new announcement
 export const createAnnouncement = mutation({
-  args: {
+  args: { sessionId: v.string(),
     title: v.string(),
     content: v.string(),
     featuredImage: v.optional(v.string()),
@@ -100,10 +111,12 @@ export const createAnnouncement = mutation({
     metaKeywords: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const now = Date.now();
 
     // Generate unique slug
-    const baseSlug = generateSlug(args.title);
+    const baseSlug = generateSlug(input.title);
     let slug = baseSlug;
     let counter = 1;
 
@@ -118,9 +131,9 @@ export const createAnnouncement = mutation({
     }
 
     return await ctx.db.insert("announcements", {
-      ...args,
+      ...input,
       slug,
-      publishedAt: args.isPublished ? now : 0,
+      publishedAt: input.isPublished ? now : 0,
       updatedAt: now,
     });
   },
@@ -128,7 +141,7 @@ export const createAnnouncement = mutation({
 
 // Update announcement
 export const updateAnnouncement = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("announcements"),
     title: v.string(),
     content: v.string(),
@@ -140,7 +153,9 @@ export const updateAnnouncement = mutation({
     metaKeywords: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updateData } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updateData } = input;
     const existing = await ctx.db.get(id);
 
     if (!existing) {
@@ -184,17 +199,21 @@ export const updateAnnouncement = mutation({
 
 // Delete announcement
 export const deleteAnnouncement = mutation({
-  args: { id: v.id("announcements") },
+  args: { sessionId: v.string(), id: v.id("announcements") },
   handler: async (ctx, args) => {
-    return await ctx.db.delete(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    return await ctx.db.delete(input.id);
   },
 });
 
 // Toggle publication status
 export const toggleAnnouncementPublication = mutation({
-  args: { id: v.id("announcements") },
+  args: { sessionId: v.string(), id: v.id("announcements") },
   handler: async (ctx, args) => {
-    const announcement = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const announcement = await ctx.db.get(input.id);
 
     if (!announcement) {
       throw new Error("Announcement not found");
@@ -203,7 +222,7 @@ export const toggleAnnouncementPublication = mutation({
     const now = Date.now();
     const isPublished = !announcement.isPublished;
 
-    return await ctx.db.patch(args.id, {
+    return await ctx.db.patch(input.id, {
       isPublished,
       publishedAt: isPublished ? (announcement.publishedAt || now) : 0,
       updatedAt: now,
@@ -213,12 +232,14 @@ export const toggleAnnouncementPublication = mutation({
 
 // Update sort order for multiple announcements (optimized with batching)
 export const updateSortOrder = mutation({
-  args: { updates: v.array(v.object({ id: v.id("announcements"), sortOrder: v.number() })) },
+  args: { sessionId: v.string(), updates: v.array(v.object({ id: v.id("announcements"), sortOrder: v.number() })) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const now = Date.now();
 
     // Batch updates for better performance
-    const promises = args.updates.map(({ id, sortOrder }) =>
+    const promises = input.updates.map(({ id, sortOrder }) =>
       ctx.db.patch(id, { sortOrder, updatedAt: now })
     );
 
@@ -228,7 +249,7 @@ export const updateSortOrder = mutation({
 
 // Paginated announcements query for admin panel
 export const getPaginatedAnnouncements = query({
-  args: {
+  args: { sessionId: v.string(),
     paginationOpts: v.object({
       numItems: v.number(),
       cursor: v.union(v.string(), v.null())
@@ -236,16 +257,18 @@ export const getPaginatedAnnouncements = query({
     publishedOnly: v.optional(v.boolean())
   },
   handler: async (ctx, args) => {
-    if (args.publishedOnly) {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    if (input.publishedOnly) {
       return await ctx.db
         .query("announcements")
         .withIndex("by_published", (q) => q.eq("isPublished", true))
-        .paginate(args.paginationOpts);
+        .paginate(input.paginationOpts);
     } else {
       return await ctx.db
         .query("announcements")
         .withIndex("by_sort_order", (q) => q.gt("sortOrder", -1))
-        .paginate(args.paginationOpts);
+        .paginate(input.paginationOpts);
     }
   },
 });

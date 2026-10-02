@@ -11,7 +11,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload';
 import { GlowButton, RippleButton } from '@/components/ui/animated-button';
 import { Plus, Edit, Trash2, Save, Eye, Image, Calendar, Tag, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useQuery, useMutation } from 'convex/react';
+import { useAdminQuery as useQuery, useAdminMutation as useMutation } from '@/lib/adminConvex';
 import { api } from '../../../convex/_generated/api';
 import { useCats, type CatData } from '@/services/convexCatService';
 import { Id } from '../../../convex/_generated/dataModel';

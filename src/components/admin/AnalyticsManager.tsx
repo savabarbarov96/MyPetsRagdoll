@@ -197,7 +197,7 @@ const AnalyticsManagerContent = () => {
                     <div key={stat.device} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {getDeviceIcon(stat.device)}
-                        <span className="text-sm text-gray-700">{getDeviceLabel(stat.device)}</span>
+                        <span className="text-sm text-gray-700">{getDeviceLabel(stat.device as Parameters<typeof getDeviceLabel>[0])}</span>
                       </div>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                         {stat.count}

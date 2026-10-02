@@ -1,10 +1,11 @@
-import { useMutation, useQuery } from "convex/react";
+import { useAdminMutation, useAdminQuery, useOptionalAdminQuery } from "@/lib/adminConvex";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
 // Custom hooks for cat management
 export const useCats = () => {
-  return useQuery(api.cats.getAllCats);
+  return useAdminQuery(api.cats.getAllCats);
 };
 
 export const useDisplayedCats = () => {
@@ -12,11 +13,11 @@ export const useDisplayedCats = () => {
 };
 
 export const useCatById = (id: Id<"cats"> | undefined) => {
-  return useQuery(api.cats.getCatById, id ? { id } : "skip");
+  return useOptionalAdminQuery(api.cats.getCatById, id ? { id } : "skip");
 };
 
 export const useSearchCats = (searchTerm?: string, gender?: 'male' | 'female', isDisplayed?: boolean) => {
-  return useQuery(api.cats.searchCats, { 
+  return useAdminQuery(api.cats.searchCats, {
     searchTerm, 
     gender, 
     isDisplayed 
@@ -24,20 +25,20 @@ export const useSearchCats = (searchTerm?: string, gender?: 'male' | 'female', i
 };
 
 export const useCatStatistics = () => {
-  return useQuery(api.cats.getCatStatistics);
+  return useAdminQuery(api.cats.getCatStatistics);
 };
 
 export const useCatsByGender = (gender: 'male' | 'female') => {
-  return useQuery(api.cats.getCatsByGender, { gender });
+  return useAdminQuery(api.cats.getCatsByGender, { gender });
 };
 
 export const useRecentCats = (limit?: number) => {
-  return useQuery(api.cats.getRecentCats, { limit });
+  return useAdminQuery(api.cats.getRecentCats, { limit });
 };
 
 // New category-based hooks for gallery filtering
 export const useCatsByCategory = (category: 'kitten' | 'adult' | 'all') => {
-  return useQuery(api.cats.getCatsByCategory, { category });
+  return useAdminQuery(api.cats.getCatsByCategory, { category });
 };
 
 export const useDisplayedCatsByCategory = (category: 'kitten' | 'adult' | 'all') => {
@@ -53,90 +54,90 @@ export const useDisplayedCatsByBreedGenderAndAge = (section: 'male' | 'female' |
 };
 
 export const useCatsByBreed = (breed?: 'ragdoll' | 'british') => {
-  return useQuery(api.cats.getCatsByBreed, breed ? { breed } : "skip");
+  return useAdminQuery(api.cats.getCatsByBreed, breed ? { breed } : "skip");
 };
 
 // Mutation hooks
 export const useCreateCat = () => {
-  return useMutation(api.cats.createCat);
+  return useAdminMutation(api.cats.createCat);
 };
 
 export const useUpdateCat = () => {
-  return useMutation(api.cats.updateCat);
+  return useAdminMutation(api.cats.updateCat);
 };
 
 export const useDeleteCat = () => {
-  return useMutation(api.cats.deleteCat);
+  return useAdminMutation(api.cats.deleteCat);
 };
 
 export const useToggleCatDisplay = () => {
-  return useMutation(api.cats.toggleCatDisplay);
+  return useAdminMutation(api.cats.toggleCatDisplay);
 };
 
 export const useBulkUpdateDisplay = () => {
-  return useMutation(api.cats.bulkUpdateDisplay);
+  return useAdminMutation(api.cats.bulkUpdateDisplay);
 };
 
 export const useBulkUpdateCategory = () => {
-  return useMutation(api.cats.bulkUpdateCategory);
+  return useAdminMutation(api.cats.bulkUpdateCategory);
 };
 
 // Pedigree hooks
 export const usePedigreeConnections = () => {
-  return useQuery(api.pedigree.getAllConnections);
+  return useAdminQuery(api.pedigree.getAllConnections);
 };
 
 export const useParents = (catId: Id<"cats"> | undefined) => {
-  return useQuery(api.pedigree.getParents, catId ? { catId } : "skip");
+  return useOptionalAdminQuery(api.pedigree.getParents, catId ? { catId } : "skip");
 };
 
 export const useChildren = (catId: Id<"cats"> | undefined) => {
-  return useQuery(api.pedigree.getChildren, catId ? { catId } : "skip");
+  return useOptionalAdminQuery(api.pedigree.getChildren, catId ? { catId } : "skip");
 };
 
 export const useFamilyTree = (rootCatId: Id<"cats"> | undefined, maxGenerations?: number) => {
-  return useQuery(
+  return useOptionalAdminQuery(
     api.pedigree.generateFamilyTree,
     rootCatId ? { rootCatId, maxGenerations } : "skip"
   );
 };
 
 export const useSavedPedigreeTrees = () => {
-  return useQuery(api.pedigree.getSavedPedigreeTrees);
+  return useAdminQuery(api.pedigree.getSavedPedigreeTrees);
 };
 
 export const usePedigreeTree = (treeId: Id<"pedigreeTrees"> | undefined) => {
-  return useQuery(api.pedigree.getPedigreeTree, treeId ? { treeId } : "skip");
+  return useAdminQuery(api.pedigree.getPedigreeTree, treeId ? { treeId } : "skip");
 };
 
 export const useBreedingStatistics = () => {
-  return useQuery(api.pedigree.getBreedingStatistics);
+  return useAdminQuery(api.pedigree.getBreedingStatistics);
 };
 
 // Pedigree mutation hooks
 export const useAddConnection = () => {
-  return useMutation(api.pedigree.addConnection);
+  return useAdminMutation(api.pedigree.addConnection);
 };
 
 export const useRemoveConnection = () => {
-  return useMutation(api.pedigree.removeConnection);
+  return useAdminMutation(api.pedigree.removeConnection);
 };
 
 export const useRemoveConnectionsByRelationship = () => {
-  return useMutation(api.pedigree.removeConnectionsByRelationship);
+  return useAdminMutation(api.pedigree.removeConnectionsByRelationship);
 };
 
 export const useSavePedigreeTree = () => {
-  return useMutation(api.pedigree.savePedigreeTree);
+  return useAdminMutation(api.pedigree.savePedigreeTree);
 };
 
 export const useDeletePedigreeTree = () => {
-  return useMutation(api.pedigree.deletePedigreeTree);
+  return useAdminMutation(api.pedigree.deletePedigreeTree);
 };
 
 // Authentication hooks
 export const useLogin = () => {
-  return useMutation(api.auth.login);
+  return useAction(api.adminLogin.login);
 };
 
 export const useLogout = () => {
@@ -149,11 +150,11 @@ export const useValidateSession = (sessionId: string | undefined) => {
 };
 
 export const useExtendSession = () => {
-  return useMutation(api.auth.extendSession);
+  return useAdminMutation(api.auth.extendSession);
 };
 
 export const useActiveSessions = () => {
-  return useQuery(api.auth.getActiveSessions);
+  return useAdminQuery(api.auth.getActiveSessions);
 };
 
 // Contact hooks
@@ -162,31 +163,31 @@ export const useSubmitContact = () => {
 };
 
 export const useAllContacts = () => {
-  return useQuery(api.contact.getAllContacts);
+  return useAdminQuery(api.contact.getAllContacts);
 };
 
 export const useContactsByStatus = (status: 'new' | 'read' | 'replied') => {
-  return useQuery(api.contact.getContactsByStatus, { status });
+  return useAdminQuery(api.contact.getContactsByStatus, { status });
 };
 
 export const useContactStatistics = () => {
-  return useQuery(api.contact.getContactStatistics);
+  return useAdminQuery(api.contact.getContactStatistics);
 };
 
 export const useUpdateContactStatus = () => {
-  return useMutation(api.contact.updateContactStatus);
+  return useAdminMutation(api.contact.updateContactStatus);
 };
 
 export const useMarkContactAsRead = () => {
-  return useMutation(api.contact.markContactAsRead);
+  return useAdminMutation(api.contact.markContactAsRead);
 };
 
 export const useMarkContactAsReplied = () => {
-  return useMutation(api.contact.markContactAsReplied);
+  return useAdminMutation(api.contact.markContactAsReplied);
 };
 
 export const useDeleteContact = () => {
-  return useMutation(api.contact.deleteContact);
+  return useAdminMutation(api.contact.deleteContact);
 };
 
 // Type exports for convenience

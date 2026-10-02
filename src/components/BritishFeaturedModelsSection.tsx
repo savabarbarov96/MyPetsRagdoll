@@ -22,7 +22,7 @@ interface CatSectionProps {
   cats: CatData[];
   onCatClick: (cat: CatData) => void;
   onPedigreeClick: (cat: CatData) => void;
-  t: any;
+  t: <T = string>(key: string) => T;
   gridVisible: boolean;
   sectionId: string;
 }

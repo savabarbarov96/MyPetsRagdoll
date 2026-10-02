@@ -15,7 +15,7 @@ const RAGDOLL_TIKTOK_THUMBNAILS = [
 ];
 
 // Fallback static TikTok videos when no database content is available - REMOVED per user request
-const FALLBACK_VIDEOS: any[] = [];
+const FALLBACK_VIDEOS: never[] = [];
 
 const TikTokSection = () => {
   const { t } = useLanguage();

@@ -1,236 +1,102 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v, ConvexError } from "convex/values";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { findAdminSession, requireAdmin } from "./lib/admin";
 
-// Create admin session
-export const login = mutation({
-  args: { 
-    password: v.string(),
-    sessionDuration: v.optional(v.number()) // Duration in milliseconds
-  },
-  handler: async (ctx, args) => {
-    // In a real app, you'd hash and compare passwords properly
-    // For now, using the same hardcoded password as the original
-    if (args.password !== "Savata619") {
-      throw new Error("Invalid password");
+export const verifyAdmin = internalQuery({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => Boolean(await findAdminSession(ctx, args.sessionId)),
+});
+
+// All failed and successful login attempts consume this server-side budget.
+export const consumeLoginAttempt = internalMutation({
+  args: {},
+  handler: async ctx => {
+    const key = "admin-login";
+    const now = Date.now();
+    const existing = await ctx.db.query("submissionLimits").withIndex("by_key", q => q.eq("key", key)).first();
+    if (existing && existing.windowEndsAt > now) {
+      if (existing.count >= 20) return false;
+      await ctx.db.patch(existing._id, { count: existing.count + 1 });
+    } else if (existing) {
+      await ctx.db.patch(existing._id, { count: 1, windowEndsAt: now + 15 * 60 * 1000 });
+    } else {
+      await ctx.db.insert("submissionLimits", { key, count: 1, windowEndsAt: now + 15 * 60 * 1000 });
     }
-
-    // Generate session ID
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    
-    // Default session duration: 24 hours
-    const duration = args.sessionDuration || 24 * 60 * 60 * 1000;
-    const expiresAt = Date.now() + duration;
-
-    // Invalidate any existing sessions (single admin approach)
-    const existingSessions = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_validity", (q) => q.eq("isValid", true))
-      .collect();
-
-    for (const session of existingSessions) {
-      await ctx.db.patch(session._id, { isValid: false });
-    }
-
-    // Create new session
-    const sessionDbId = await ctx.db.insert("adminSessions", {
-      sessionId,
-      isValid: true,
-      expiresAt,
-    });
-
-    return {
-      sessionId,
-      expiresAt,
-      success: true
-    };
+    return true;
   },
 });
 
-// Validate session
+export const createSession = internalMutation({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    if (!/^admin_[a-f0-9]{64}$/.test(args.sessionId)) throw new ConvexError("Invalid session");
+    const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+    const sessions = await ctx.db.query("adminSessions").withIndex("by_validity", q => q.eq("isValid", true)).collect();
+    for (const session of sessions) await ctx.db.patch(session._id, { isValid: false });
+    await ctx.db.insert("adminSessions", { sessionId: args.sessionId, isValid: true, expiresAt, authVersion: 2 });
+    return { sessionId: args.sessionId, expiresAt, success: true as const };
+  },
+});
+
 export const validateSession = query({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    // Return invalid if no sessionId provided
-    if (!args.sessionId) {
-      return { isValid: false, reason: "No session ID provided" };
-    }
-    const session = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId!))
-      .first();
-
-    if (!session) {
-      return { isValid: false, reason: "Session not found" };
-    }
-
-    if (!session.isValid) {
-      return { isValid: false, reason: "Session invalidated" };
-    }
-
-    if (session.expiresAt < Date.now()) {
-      // Session is expired
-      return { isValid: false, reason: "Session expired" };
-    }
-
-    return { 
-      isValid: true, 
-      session: {
-        sessionId: session.sessionId,
-        expiresAt: session.expiresAt,
-        createdAt: session._creationTime
-      }
-    };
+    const session = await findAdminSession(ctx, args.sessionId);
+    return session ? { isValid: true, expiresAt: session.expiresAt } : { isValid: false };
   },
 });
 
-// Logout (invalidate session)
 export const logout = mutation({
   args: { sessionId: v.string() },
   handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId))
-      .first();
-
-    if (session) {
-      await ctx.db.patch(session._id, { isValid: false });
-    }
-
+    const session = await findAdminSession(ctx, args.sessionId);
+    if (session) await ctx.db.patch(session._id, { isValid: false });
     return { success: true };
   },
 });
 
-// Logout all sessions
 export const logoutAll = mutation({
-  handler: async (ctx) => {
-    const activeSessions = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_validity", (q) => q.eq("isValid", true))
-      .collect();
-
-    for (const session of activeSessions) {
-      await ctx.db.patch(session._id, { isValid: false });
-    }
-
-    return { 
-      success: true, 
-      invalidatedSessions: activeSessions.length 
-    };
-  },
-});
-
-// Extend session (refresh)
-export const extendSession = mutation({
-  args: { 
-    sessionId: v.string(),
-    extensionDuration: v.optional(v.number()) // Additional time in milliseconds
-  },
+  args: { sessionId: v.string() },
   handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_session_id", (q) => q.eq("sessionId", args.sessionId))
-      .first();
-
-    if (!session || !session.isValid) {
-      throw new Error("Invalid session");
-    }
-
-    if (session.expiresAt < Date.now()) {
-      throw new Error("Session already expired");
-    }
-
-    // Default extension: 24 hours
-    const extension = args.extensionDuration || 24 * 60 * 60 * 1000;
-    const newExpiresAt = Math.max(session.expiresAt, Date.now()) + extension;
-
-    await ctx.db.patch(session._id, { expiresAt: newExpiresAt });
-
-    return {
-      sessionId: session.sessionId,
-      expiresAt: newExpiresAt,
-      success: true
-    };
+    await requireAdmin(ctx, args.sessionId);
+    const sessions = await ctx.db.query("adminSessions").withIndex("by_validity", q => q.eq("isValid", true)).collect();
+    for (const session of sessions) await ctx.db.patch(session._id, { isValid: false });
+    return { success: true, invalidatedSessions: sessions.length };
   },
 });
 
-// Get active sessions (admin utility)
 export const getActiveSessions = query({
-  handler: async (ctx) => {
-    const sessions = await ctx.db
-      .query("adminSessions")
-      .withIndex("by_validity", (q) => q.eq("isValid", true))
-      .collect();
-
-    // Filter out expired sessions
-    const activeSessions = sessions.filter(session => session.expiresAt > Date.now());
-
-    return activeSessions.map(session => ({
-      sessionId: session.sessionId,
-      expiresAt: session.expiresAt,
-      createdAt: session._creationTime,
-      timeRemaining: session.expiresAt - Date.now()
-    }));
-  },
-});
-
-// Clean up expired sessions (maintenance function)
-export const cleanupExpiredSessions = mutation({
-  handler: async (ctx) => {
-    const allSessions = await ctx.db.query("adminSessions").collect();
-    const expiredSessions = allSessions.filter(
-      session => session.expiresAt < Date.now() && session.isValid
-    );
-
-    for (const session of expiredSessions) {
-      await ctx.db.patch(session._id, { isValid: false });
-    }
-
-    return {
-      success: true,
-      cleanedUp: expiredSessions.length
-    };
-  },
-});
-
-// Change admin password (this would require additional security in a real app)
-export const changePassword = mutation({
-  args: {
-    currentPassword: v.string(),
-    newPassword: v.string(),
-    invalidateAllSessions: v.optional(v.boolean())
-  },
+  args: { sessionId: v.string() },
   handler: async (ctx, args) => {
-    // Verify current password
-    if (args.currentPassword !== "Savata619") {
-      throw new Error("Current password is incorrect");
-    }
-
-    // In a real application, you would:
-    // 1. Hash the new password
-    // 2. Store it securely
-    // 3. Implement proper password validation
-    
-    // For this demo, we'll just invalidate sessions if requested
-    if (args.invalidateAllSessions) {
-      const activeSessions = await ctx.db
-        .query("adminSessions")
-        .withIndex("by_validity", (q) => q.eq("isValid", true))
-        .collect();
-
-      for (const session of activeSessions) {
-        await ctx.db.patch(session._id, { isValid: false });
-      }
-
-      return {
-        success: true,
-        message: "Password changed and all sessions invalidated",
-        invalidatedSessions: activeSessions.length
-      };
-    }
-
-    return {
-      success: true,
-      message: "Password changed successfully"
-    };
+    await requireAdmin(ctx, args.sessionId);
+    const sessions = await ctx.db.query("adminSessions").withIndex("by_validity", q => q.eq("isValid", true)).collect();
+    return sessions.filter(s => s.authVersion === 2 && s.expiresAt > Date.now())
+      .map(s => ({ expiresAt: s.expiresAt, createdAt: s._creationTime }));
   },
-}); 
+});
+
+// Sessions have a fixed lifetime; log in again to renew them.
+export const extendSession = mutation({
+  args: { sessionId: v.string(), extensionDuration: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const session = await findAdminSession(ctx, args.sessionId);
+    return { sessionId: args.sessionId, expiresAt: session!.expiresAt, success: true };
+  },
+});
+
+export const cleanupExpiredSessions = internalMutation({
+  args: {},
+  handler: async ctx => {
+    const sessions = await ctx.db.query("adminSessions").withIndex("by_validity", q => q.eq("isValid", true)).collect();
+    for (const session of sessions) if (session.expiresAt <= Date.now()) await ctx.db.patch(session._id, { isValid: false });
+  },
+});
+
+export const cleanupSubmissionLimits = internalMutation({
+  args: {},
+  handler: async ctx => {
+    const expired = await ctx.db.query("submissionLimits").withIndex("by_expiry", q => q.lt("windowEndsAt", Date.now())).take(500);
+    for (const limit of expired) await ctx.db.delete(limit._id);
+  },
+});

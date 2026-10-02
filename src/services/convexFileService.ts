@@ -1,3 +1,4 @@
+import { useAdminMutation } from "@/lib/adminConvex";
 import { useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -13,6 +14,7 @@ export interface UploadFileOptions {
   associatedCatId?: Id<"cats">;
   imageType: 'profile' | 'gallery' | 'general' | 'news' | 'award_certificate' | 'award_gallery' | 'business_gallery';
   onProgress?: (progress: number) => void;
+  maxSizeInMB?: number;
 }
 
 export interface VideoUploadOptions {
@@ -24,8 +26,8 @@ export interface VideoUploadOptions {
 
 // Hook for uploading files to Convex storage
 export const useFileUpload = () => {
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const saveUploadedFile = useMutation(api.files.saveUploadedFile);
+  const generateUploadUrl = useAdminMutation(api.files.generateUploadUrl);
+  const saveUploadedFile = useAdminMutation(api.files.saveUploadedFile);
 
   const uploadFile = async (
     file: File, 
@@ -36,7 +38,7 @@ export const useFileUpload = () => {
 
       // Step 1: Compress image if it's an image file to stay under Convex 1 MiB limit
       let fileToUpload = file;
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith('image/') && options.imageType !== 'award_certificate' && options.imageType !== 'business_gallery') {
         try {
           // Use enhanced compression with automatic WebP conversion
           const compressionOptions: ImageCompressionOptions = {
@@ -570,12 +572,12 @@ export const compressVideo = async (
 
 // Hook for uploading videos with thumbnail generation
 export const useVideoUpload = () => {
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const generateUploadUrl = useAdminMutation(api.files.generateUploadUrl);
   
   const uploadVideo = async (
     file: File,
     options: VideoUploadOptions = {}
-  ): Promise<FileUploadResult & { thumbnailUrl?: string; metadata?: any }> => {
+  ): Promise<FileUploadResult & { thumbnailUrl?: string; metadata?: {duration: number; width: number; height: number; size: number} }> => {
     try {
       options.onProgress?.(0);
 
@@ -623,7 +625,7 @@ export const useVideoUpload = () => {
       options.onProgress?.(40);
 
       // Step 4: Compress video if needed (optional for now)
-      let fileToUpload = file;
+      const fileToUpload = file;
       // Uncomment for compression:
       // if (file.size > 10 * 1024 * 1024) { // Compress if > 10MB
       //   fileToUpload = await compressVideo(file, options);

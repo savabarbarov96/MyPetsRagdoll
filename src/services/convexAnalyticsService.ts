@@ -1,3 +1,4 @@
+import { useAdminMutation, useAdminQuery } from "@/lib/adminConvex";
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
@@ -47,22 +48,22 @@ export interface DeviceStat {
 
 // Hook to get analytics summary
 export const useAnalyticsSummary = () => {
-  return useQuery(api.analytics.getAnalyticsSummary);
+  return useAdminQuery(api.analytics.getAnalyticsSummary);
 };
 
 // Hook to get daily stats
 export const useDailyStats = (days?: number) => {
-  return useQuery(api.analytics.getDailyStats, days ? { days } : {});
+  return useAdminQuery(api.analytics.getDailyStats, days ? { days } : {});
 };
 
 // Hook to get page stats
 export const usePageStats = (path?: string) => {
-  return useQuery(api.analytics.getPageStats, path ? { path } : {});
+  return useAdminQuery(api.analytics.getPageStats, path ? { path } : {});
 };
 
 // Hook to get device stats
 export const useDeviceStats = () => {
-  return useQuery(api.analytics.getDeviceStats);
+  return useAdminQuery(api.analytics.getDeviceStats);
 };
 
 // Hook to track page visit

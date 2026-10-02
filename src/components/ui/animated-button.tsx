@@ -24,12 +24,12 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsHovered(true);
     onMouseEnter?.(e);
   };
 
-  const handleMouseLeave = (e: React.MouseEvent) => {
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsHovered(false);
     onMouseLeave?.(e);
   };
@@ -42,7 +42,7 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
     });
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (animationType === "ripple") {
       const rect = e.currentTarget.getBoundingClientRect();
       const newRipple = {
@@ -83,13 +83,13 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
         return {
           whileHover: { scale: 1.05, y: -2 },
           whileTap: { scale: 0.95 },
-          transition: { type: "spring", stiffness: 400, damping: 17 }
+          transition: { type: "spring" as const, stiffness: 400, damping: 17 }
         };
       case "slide":
         return {
           whileHover: { x: 4 },
           whileTap: { x: 0 },
-          transition: { type: "spring", stiffness: 400, damping: 25 }
+          transition: { type: "spring" as const, stiffness: 400, damping: 25 }
         };
       default:
         return {
@@ -104,8 +104,6 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
     <motion.div
       style={getButtonStyles()}
       {...getAnimationProps()}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
       className="relative inline-block"
     >
@@ -119,6 +117,8 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
         )}
         {...props}
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Background animations */}
         {animationType === "slide" && (

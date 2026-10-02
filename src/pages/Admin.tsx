@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import WaitingListManager from '@/components/admin/WaitingListManager';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
 import AdminLogin from './AdminLogin';
@@ -15,7 +16,7 @@ import { CatData } from '@/services/convexCatService';
 import ragdollLogo from '@/assets/ragdoll-logo.png';
 import { Menu, X } from 'lucide-react';
 
-type AdminTab = 'pedigree' | 'british' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr' | 'analytics';
+type AdminTab = 'waiting-list' | 'pedigree' | 'british' | 'news' | 'gallery' | 'tiktok' | 'social' | 'herovideo' | 'qr' | 'analytics';
 
 const Admin = () => {
   const { isAuthenticated, isLoading, logout } = useAdminAuth();
@@ -25,6 +26,7 @@ const Admin = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const adminTabs = [
+    { id: 'waiting-list' as AdminTab, label: 'Чакащи за котенце', icon: '✉' },
     { id: 'pedigree' as AdminTab, label: 'Родословие', icon: '🌳' },
     { id: 'british' as AdminTab, label: 'Британски', icon: '🐱' },
     { id: 'news' as AdminTab, label: 'Новини', icon: '📰' },
@@ -59,6 +61,8 @@ const Admin = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'waiting-list':
+        return <WaitingListManager />;
       case 'pedigree':
         return (
           <div className="flex flex-col lg:flex-row min-h-0 flex-1">

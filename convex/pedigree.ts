@@ -1,3 +1,5 @@
+import { publicCat } from "./lib/publicCat";
+import { requireAdmin, findAdminSession } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -12,15 +14,18 @@ type TreeNode = Doc<"cats"> & {
 
 // Get all pedigree connections
 export const getAllConnections = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
     return await ctx.db.query("pedigreeConnections").collect();
   },
 });
 
 // Get connections for a specific cat as parent
 export const getConnectionsByParent = query({
-  args: { parentId: v.id("cats") },
+  args: { sessionId: v.string(), parentId: v.id("cats") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
     return await ctx.db
       .query("pedigreeConnections")
       .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
@@ -30,8 +35,9 @@ export const getConnectionsByParent = query({
 
 // Get connections for a specific cat as child
 export const getConnectionsByChild = query({
-  args: { childId: v.id("cats") },
+  args: { sessionId: v.string(), childId: v.id("cats") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
     return await ctx.db
       .query("pedigreeConnections")
       .withIndex("by_child", (q) => q.eq("childId", args.childId))
@@ -41,12 +47,14 @@ export const getConnectionsByChild = query({
 
 // Get parents of a specific cat
 export const getParents = query({
-  args: { catId: v.optional(v.id("cats")) },
+  args: { sessionId: v.optional(v.string()), catId: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
     // Return empty result if no catId provided
     if (!args.catId) {
       return { mother: null, father: null };
     }
+    const root = args.catId ? await ctx.db.get(args.catId) : null;
+    if (!root || (!root.isDisplayed && !await findAdminSession(ctx, args.sessionId))) return { mother: null, father: null };
     const connections = await ctx.db
       .query("pedigreeConnections")
       .withIndex("by_child", (q) => q.eq("childId", args.catId!))
@@ -56,7 +64,8 @@ export const getParents = query({
     let father = null;
 
     for (const connection of connections) {
-      const parent = await ctx.db.get(connection.parentId);
+      const record = await ctx.db.get(connection.parentId);
+      const parent = record ? (await findAdminSession(ctx, args.sessionId) ? record : publicCat(record)) : null;
       if (connection.type === "mother") {
         mother = parent;
       } else if (connection.type === "father") {
@@ -70,12 +79,14 @@ export const getParents = query({
 
 // Get children of a specific cat
 export const getChildren = query({
-  args: { catId: v.optional(v.id("cats")) },
+  args: { sessionId: v.optional(v.string()), catId: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
     // Return empty array if no catId provided
     if (!args.catId) {
       return [];
     }
+    const root = args.catId ? await ctx.db.get(args.catId) : null;
+    if (!root || (!root.isDisplayed && !await findAdminSession(ctx, args.sessionId))) return [];
     const connections = await ctx.db
       .query("pedigreeConnections")
       .withIndex("by_parent", (q) => q.eq("parentId", args.catId!))
@@ -84,9 +95,9 @@ export const getChildren = query({
     const children = [];
     for (const connection of connections) {
       const child = await ctx.db.get(connection.childId);
-      if (child) {
+      if (child && (child.isDisplayed || await findAdminSession(ctx, args.sessionId))) {
         children.push({
-          ...child,
+          ...(await findAdminSession(ctx, args.sessionId) ? child : publicCat(child)),
           relationshipType: connection.type
         });
       }
@@ -98,20 +109,22 @@ export const getChildren = query({
 
 // Add a parent-child connection
 export const addConnection = mutation({
-  args: {
+  args: { sessionId: v.string(),
     parentId: v.id("cats"),
     childId: v.id("cats"),
     type: v.union(v.literal("mother"), v.literal("father")),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Validate: prevent self-parenting
-    if (args.parentId === args.childId) {
+    if (input.parentId === input.childId) {
       throw new Error("Cat cannot be parent of itself");
     }
 
     // Check if parent and child exist
-    const parent = await ctx.db.get(args.parentId);
-    const child = await ctx.db.get(args.childId);
+    const parent = await ctx.db.get(input.parentId);
+    const child = await ctx.db.get(input.childId);
     
     if (!parent || !child) {
       throw new Error("Parent or child cat not found");
@@ -121,7 +134,7 @@ export const addConnection = mutation({
     const existingConnections = await ctx.db
       .query("pedigreeConnections")
       .withIndex("by_child_type", (q) => 
-        q.eq("childId", args.childId).eq("type", args.type)
+        q.eq("childId", input.childId).eq("type", input.type)
       )
       .collect();
 
@@ -131,9 +144,9 @@ export const addConnection = mutation({
 
     // Create new connection
     const connectionId = await ctx.db.insert("pedigreeConnections", {
-      parentId: args.parentId,
-      childId: args.childId,
-      type: args.type,
+      parentId: input.parentId,
+      childId: input.childId,
+      type: input.type,
     });
 
     return connectionId;
@@ -142,38 +155,42 @@ export const addConnection = mutation({
 
 // Remove a specific connection
 export const removeConnection = mutation({
-  args: { connectionId: v.id("pedigreeConnections") },
+  args: { sessionId: v.string(), connectionId: v.id("pedigreeConnections") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.connectionId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.connectionId);
     return { success: true };
   },
 });
 
 // Remove all connections for a specific parent-child relationship
 export const removeConnectionsByRelationship = mutation({
-  args: {
+  args: { sessionId: v.string(),
     parentId: v.id("cats"),
     childId: v.id("cats"),
     type: v.optional(v.union(v.literal("mother"), v.literal("father"))),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     let connections;
     
-    if (args.type) {
+    if (input.type) {
       connections = await ctx.db
         .query("pedigreeConnections")
         .withIndex("by_child_type", (q) => 
-          q.eq("childId", args.childId).eq("type", args.type!)
+          q.eq("childId", input.childId).eq("type", input.type!)
         )
-        .filter((q) => q.eq(q.field("parentId"), args.parentId))
+        .filter((q) => q.eq(q.field("parentId"), input.parentId))
         .collect();
     } else {
       const parentConnections = await ctx.db
         .query("pedigreeConnections")
-        .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+        .withIndex("by_parent", (q) => q.eq("parentId", input.parentId))
         .collect();
       
-      connections = parentConnections.filter(c => c.childId === args.childId);
+      connections = parentConnections.filter(c => c.childId === input.childId);
     }
 
     for (const connection of connections) {
@@ -186,7 +203,7 @@ export const removeConnectionsByRelationship = mutation({
 
 // Generate a complete family tree for a cat
 export const generateFamilyTree = query({
-  args: { 
+  args: { sessionId: v.optional(v.string()),
     rootCatId: v.optional(v.id("cats")),
     maxGenerations: v.optional(v.number())
   },
@@ -203,13 +220,14 @@ export const generateFamilyTree = query({
         generationCount: 0,
       };
     }
-    const maxGen = args.maxGenerations || 5;
+    const maxGen = Math.min(5, Math.max(1, args.maxGenerations || 5));
     const rootCat = await ctx.db.get(args.rootCatId!);
     
-    if (!rootCat) {
+    if (!rootCat || (!rootCat.isDisplayed && !await findAdminSession(ctx, args.sessionId))) {
       throw new Error("Root cat not found");
     }
 
+    const admin = await findAdminSession(ctx, args.sessionId);
     const nodes: TreeNode[] = [];
     const visited = new Set<string>();
 
@@ -238,7 +256,7 @@ export const generateFamilyTree = query({
       }
 
       const node = {
-        ...cat,
+        ...(admin ? cat : publicCat(cat)),
         generation,
         position: { x, y },
         motherId,
@@ -278,34 +296,36 @@ export const generateFamilyTree = query({
 
 // Save a pedigree tree
 export const savePedigreeTree = mutation({
-  args: {
+  args: { sessionId: v.string(),
     rootCatId: v.id("cats"),
     name: v.string(),
     description: v.string(),
     treeData: v.string(), // JSON stringified tree data
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Check if a tree already exists for this root cat
     const existingTree = await ctx.db
       .query("pedigreeTrees")
-      .withIndex("by_root_cat", (q) => q.eq("rootCatId", args.rootCatId))
+      .withIndex("by_root_cat", (q) => q.eq("rootCatId", input.rootCatId))
       .first();
 
     if (existingTree) {
       // Update existing tree
       await ctx.db.patch(existingTree._id, {
-        name: args.name,
-        description: args.description,
-        treeData: args.treeData,
+        name: input.name,
+        description: input.description,
+        treeData: input.treeData,
       });
       return existingTree._id;
     } else {
       // Create new tree
       const treeId = await ctx.db.insert("pedigreeTrees", {
-        rootCatId: args.rootCatId,
-        name: args.name,
-        description: args.description,
-        treeData: args.treeData,
+        rootCatId: input.rootCatId,
+        name: input.name,
+        description: input.description,
+        treeData: input.treeData,
       });
       return treeId;
     }
@@ -314,7 +334,10 @@ export const savePedigreeTree = mutation({
 
 // Get saved pedigree trees
 export const getSavedPedigreeTrees = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const trees = await ctx.db.query("pedigreeTrees").collect();
     
     // Enhance with root cat data
@@ -333,13 +356,15 @@ export const getSavedPedigreeTrees = query({
 
 // Get a specific saved pedigree tree
 export const getPedigreeTree = query({
-  args: { treeId: v.optional(v.id("pedigreeTrees")) },
+  args: { sessionId: v.string(), treeId: v.optional(v.id("pedigreeTrees")) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Return null if no treeId provided
-    if (!args.treeId) {
+    if (!input.treeId) {
       return null;
     }
-    const tree = await ctx.db.get(args.treeId!);
+    const tree = await ctx.db.get(input.treeId!);
     if (!tree) return null;
 
     const rootCat = await ctx.db.get(tree.rootCatId);
@@ -352,16 +377,21 @@ export const getPedigreeTree = query({
 
 // Delete a saved pedigree tree
 export const deletePedigreeTree = mutation({
-  args: { treeId: v.id("pedigreeTrees") },
+  args: { sessionId: v.string(), treeId: v.id("pedigreeTrees") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.treeId);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.treeId);
     return { success: true };
   },
 });
 
 // Get breeding statistics
 export const getBreedingStatistics = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const connections = await ctx.db.query("pedigreeConnections").collect();
     const allCats = await ctx.db.query("cats").collect();
 
@@ -390,4 +420,23 @@ export const getBreedingStatistics = query({
       orphanCats: allCats.length - offspring.size, // Cats with no recorded parents
     };
   },
-}); 
+});
+// A narrow public pedigree endpoint: hidden parents remain readable under a displayed cat.
+export const getPublicParents = query({
+  args: { catId: v.id("cats") },
+  handler: async (ctx, args) => {
+    const root = await ctx.db.get(args.catId);
+    if (!root?.isDisplayed) return { mother: null, father: null };
+    const connections = await ctx.db.query("pedigreeConnections")
+      .withIndex("by_child", q => q.eq("childId", args.catId)).collect();
+    function publicParent(cat: Doc<"cats"> | null) {
+      if (!cat) return null;
+      const { _id, name, image, birthDate, gender, color, breed, registrationNumber } = cat;
+      return { _id, name, image, birthDate, gender, color, breed, registrationNumber };
+    }
+    const motherConnection = connections.find(c => c.type === "mother");
+    const fatherConnection = connections.find(c => c.type === "father");
+    return { mother: publicParent(motherConnection ? await ctx.db.get(motherConnection.parentId) : null),
+      father: publicParent(fatherConnection ? await ctx.db.get(fatherConnection.parentId) : null) };
+  },
+});

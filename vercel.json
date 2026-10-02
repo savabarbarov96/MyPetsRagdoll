@@ -3,6 +3,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://wandering-bobcat-37.convex.site/sitemap.xml"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -122,4 +126,4 @@
       ]
     }
   ]
-} 
+}

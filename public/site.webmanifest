@@ -1,11 +1,11 @@
 {
-  "name": "BleuRoi Ragdoll Cattery",
+  "name": "BleuRoi Ragdoll & British Cattery",
   "short_name": "BleuRoi",
   "description": "Елитен развъдник за породисти котки рагдол в България. Качествени родословни и изключителни котки от BleuRoi Ragdoll Cattery.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#FAF6F0",
+  "theme_color": "#FAF6F0",
   "orientation": "portrait-primary",
   "icons": [
     {

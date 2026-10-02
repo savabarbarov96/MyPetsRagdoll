@@ -1,3 +1,4 @@
+import { requireAdmin } from "./lib/admin";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -32,7 +33,10 @@ export const getPublishedGalleryItems = query({
 
 // Query to get all gallery items (for admin)
 export const getAllGalleryItems = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("gallery")
       .order("desc")
@@ -68,7 +72,7 @@ export const getGalleryCategoriesWithCounts = query({
 
 // Mutation to create a new gallery item
 export const createGalleryItem = mutation({
-  args: {
+  args: { sessionId: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.string(),
@@ -78,12 +82,14 @@ export const createGalleryItem = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Get the highest sort order and add 1
     const existingItems = await ctx.db.query("gallery").collect();
     const maxSortOrder = Math.max(0, ...existingItems.map(item => item.sortOrder));
 
     return await ctx.db.insert("gallery", {
-      ...args,
+      ...input,
       isPublished: true,
       sortOrder: maxSortOrder + 1,
       uploadedAt: Date.now(),
@@ -93,7 +99,7 @@ export const createGalleryItem = mutation({
 
 // Mutation to update a gallery item
 export const updateGalleryItem = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("gallery"),
     title: v.string(),
     description: v.optional(v.string()),
@@ -104,19 +110,23 @@ export const updateGalleryItem = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const { id, ...updateData } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updateData } = input;
     return await ctx.db.patch(id, updateData);
   },
 });
 
 // Mutation to toggle publication status
 export const toggleGalleryItemPublication = mutation({
-  args: { id: v.id("gallery") },
+  args: { sessionId: v.string(), id: v.id("gallery") },
   handler: async (ctx, args) => {
-    const item = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const item = await ctx.db.get(input.id);
     if (!item) throw new Error("Gallery item not found");
 
-    return await ctx.db.patch(args.id, {
+    return await ctx.db.patch(input.id, {
       isPublished: !item.isPublished,
     });
   },
@@ -124,21 +134,25 @@ export const toggleGalleryItemPublication = mutation({
 
 // Mutation to delete a gallery item
 export const deleteGalleryItem = mutation({
-  args: { id: v.id("gallery") },
+  args: { sessionId: v.string(), id: v.id("gallery") },
   handler: async (ctx, args) => {
-    return await ctx.db.delete(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    return await ctx.db.delete(input.id);
   },
 });
 
 // Mutation to update sort order
 export const updateGalleryItemSortOrder = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("gallery"),
     newSortOrder: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.patch(args.id, {
-      sortOrder: args.newSortOrder,
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    return await ctx.db.patch(input.id, {
+      sortOrder: input.newSortOrder,
     });
   },
 });

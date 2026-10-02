@@ -1,3 +1,4 @@
+import { requireAdmin } from "./lib/admin";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -41,14 +42,17 @@ function getDateString(daysAgo: number = 0): string {
 }
 
 // Helper function to count unique sessions
-function countUniqueSessions(visits: any[]): number {
+function countUniqueSessions(visits: Array<{sessionId: string}>): number {
   const uniqueSessions = new Set(visits.map(v => v.sessionId));
   return uniqueSessions.size;
 }
 
 // Query to get analytics summary (today, 7d, 30d, all-time)
 export const getAnalyticsSummary = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const now = Date.now();
     const todayStart = getStartOfDay(0);
     const sevenDaysAgo = getStartOfDay(7);
@@ -117,9 +121,11 @@ export const getAnalyticsSummary = query({
 
 // Query to get daily stats for the last N days
 export const getDailyStats = query({
-  args: { days: v.optional(v.number()) },
+  args: { sessionId: v.string(), days: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const daysToFetch = args.days || 30;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const daysToFetch = input.days || 30;
 
     // Get all visits for the time period
     const startDate = getStartOfDay(daysToFetch - 1);
@@ -167,12 +173,14 @@ export const getDailyStats = query({
 
 // Query to get page-specific stats
 export const getPageStats = query({
-  args: { path: v.optional(v.string()) },
+  args: { sessionId: v.string(), path: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     let visits;
 
-    if (args.path) {
-      const path = args.path; // Extract to ensure type safety
+    if (input.path) {
+      const path = input.path; // Extract to ensure type safety
       visits = await ctx.db
         .query("pageVisits")
         .withIndex("by_path", q => q.eq("path", path))
@@ -211,7 +219,10 @@ export const getPageStats = query({
 
 // Query to get device breakdown
 export const getDeviceStats = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const allVisits = await ctx.db
       .query("pageVisits")
       .collect();
@@ -239,8 +250,8 @@ export const getDeviceStats = query({
 // Internal mutation to create daily synthetic visits (called by cron job)
 export const createDailySyntheticVisits = internalMutation({
   args: { date: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    const dateStr = args.date || getDateString(0);
+  handler: async (ctx, input) => {
+    const dateStr = input.date || getDateString(0);
 
     // Check if synthetic visits already exist for this date
     const existing = await ctx.db
@@ -268,7 +279,10 @@ export const createDailySyntheticVisits = internalMutation({
 
 // Query to get all synthetic visits (for admin debugging)
 export const getAllSyntheticVisits = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("syntheticVisits")
       .collect();

@@ -13,6 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as adminLogin from "../adminLogin.js";
+import type * as sitemap from "../sitemap.js";
+import type * as http from "../http.js";
+import type * as waitingList from "../waitingList.js";
 import type * as analytics from "../analytics.js";
 import type * as announcements from "../announcements.js";
 import type * as auth from "../auth.js";
@@ -39,6 +43,10 @@ import type * as tiktokVideos from "../tiktokVideos.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adminLogin: typeof adminLogin;
+  sitemap: typeof sitemap;
+  http: typeof http;
+  waitingList: typeof waitingList;
   analytics: typeof analytics;
   announcements: typeof announcements;
   auth: typeof auth;

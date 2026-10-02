@@ -1,10 +1,12 @@
+import { useOptionalAdminQuery } from "@/lib/adminConvex";
+import { useAdminMutation, useAdminQuery } from "@/lib/adminConvex";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
 // Query hooks for TikTok videos
 export const useAllTikTokVideos = () => {
-  return useQuery(api.tiktokVideos.getAllVideos);
+  return useAdminQuery(api.tiktokVideos.getAllVideos);
 };
 
 export const useActiveTikTokVideos = () => {
@@ -26,32 +28,32 @@ export const useTikTokVideosForMainSection = (limit?: number) => {
 };
 
 export const useTikTokVideoById = (id: Id<"tiktokVideos"> | undefined) => {
-  return useQuery(api.tiktokVideos.getVideoById, id ? { id } : {});
+  return useOptionalAdminQuery(api.tiktokVideos.getVideoById, id ? { id } : {});
 };
 
 export const useTikTokVideoStatistics = () => {
-  return useQuery(api.tiktokVideos.getVideoStatistics);
+  return useAdminQuery(api.tiktokVideos.getVideoStatistics);
 };
 
 // Mutation hooks for TikTok videos
 export const useCreateTikTokVideo = () => {
-  return useMutation(api.tiktokVideos.createVideo);
+  return useAdminMutation(api.tiktokVideos.createVideo);
 };
 
 export const useUpdateTikTokVideo = () => {
-  return useMutation(api.tiktokVideos.updateVideo);
+  return useAdminMutation(api.tiktokVideos.updateVideo);
 };
 
 export const useDeleteTikTokVideo = () => {
-  return useMutation(api.tiktokVideos.deleteVideo);
+  return useAdminMutation(api.tiktokVideos.deleteVideo);
 };
 
 export const useToggleTikTokVideoActive = () => {
-  return useMutation(api.tiktokVideos.toggleVideoActive);
+  return useAdminMutation(api.tiktokVideos.toggleVideoActive);
 };
 
 export const useUpdateTikTokVideoOrder = () => {
-  return useMutation(api.tiktokVideos.updateVideoOrder);
+  return useAdminMutation(api.tiktokVideos.updateVideoOrder);
 };
 
 // Type exports

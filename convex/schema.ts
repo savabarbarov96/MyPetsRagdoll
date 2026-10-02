@@ -2,6 +2,18 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  waitingListSubmissions: defineTable({
+    email: v.optional(v.string()), phone: v.optional(v.string()),
+    normalizedEmail: v.optional(v.string()), normalizedPhone: v.optional(v.string()),
+    name: v.optional(v.string()), preferences: v.optional(v.string()),
+    followUpConsent: v.literal(true), noticeVersion: v.string(), consentedAt: v.number(),
+    status: v.union(v.literal("new"), v.literal("contacted"), v.literal("closed")),
+    notes: v.string(), updatedAt: v.number(),
+    context: v.optional(v.object({catId: v.optional(v.id("cats")), label: v.optional(v.string()), url: v.string()})),
+  }).index("by_email", ["normalizedEmail"]).index("by_phone", ["normalizedPhone"]).index("by_status", ["status"]),
+
+  submissionLimits: defineTable({key: v.string(), count: v.number(), windowEndsAt: v.number()}).index("by_key", ["key"]).index("by_expiry", ["windowEndsAt"]),
+
   // Main cats table
   cats: defineTable({
     name: v.string(),
@@ -17,6 +29,7 @@ export default defineSchema({
     registrationNumber: v.optional(v.string()),
     isDisplayed: v.boolean(),
     freeText: v.optional(v.string()),
+    internalNotes: v.optional(v.string()),
     // New fields for gallery filtering
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
     // Breed field to distinguish Ragdoll from British Longhair
@@ -55,6 +68,7 @@ export default defineSchema({
     sessionId: v.string(),
     isValid: v.boolean(),
     expiresAt: v.number(), // Unix timestamp
+    authVersion: v.optional(v.number()),
     createdBy: v.optional(v.string()), // Could track who created the session
   })
     .index("by_session_id", ["sessionId"])

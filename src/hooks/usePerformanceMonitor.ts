@@ -42,8 +42,8 @@ export const usePerformanceMonitor = () => {
           const clsObserver = new PerformanceObserver((list) => {
             let clsValue = 0;
             for (const entry of list.getEntries()) {
-              if (!(entry as any).hadRecentInput) {
-                clsValue += (entry as any).value;
+              if (!(entry as PerformanceEntry & { hadRecentInput: boolean }).hadRecentInput) {
+                clsValue += (entry as PerformanceEntry & { value: number }).value;
               }
             }
             setMetrics(prev => ({ ...prev, cls: clsValue }));
@@ -53,7 +53,7 @@ export const usePerformanceMonitor = () => {
           // FID - First Input Delay
           const fidObserver = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
-              setMetrics(prev => ({ ...prev, fid: (entry as any).processingStart - entry.startTime }));
+              setMetrics(prev => ({ ...prev, fid: (entry as PerformanceEntry & { processingStart: number }).processingStart - entry.startTime }));
             }
           });
           fidObserver.observe({ entryTypes: ['first-input'] });
@@ -68,7 +68,7 @@ export const usePerformanceMonitor = () => {
     const monitorImageLoading = () => {
       const images = document.querySelectorAll('img');
       let loadedImages = 0;
-      let totalImages = images.length;
+      const totalImages = images.length;
       const startTime = performance.now();
 
       if (totalImages === 0) {

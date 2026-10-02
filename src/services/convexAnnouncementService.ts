@@ -1,10 +1,12 @@
+import { useOptionalAdminQuery } from "@/lib/adminConvex";
+import { useAdminMutation, useAdminQuery } from "@/lib/adminConvex";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
 // Query hooks for announcements
 export const useAllAnnouncements = () => {
-  return useQuery(api.announcements.getAllAnnouncements);
+  return useAdminQuery(api.announcements.getAllAnnouncements);
 };
 
 export const usePublishedAnnouncements = () => {
@@ -16,7 +18,7 @@ export const useLatestAnnouncements = (limit?: number) => {
 };
 
 export const useAnnouncementById = (id: Id<"announcements">) => {
-  return useQuery(api.announcements.getAnnouncementById, { id });
+  return useOptionalAdminQuery(api.announcements.getAnnouncementById, { id });
 };
 
 export const useAnnouncementBySlug = (slug: string) => {
@@ -25,23 +27,23 @@ export const useAnnouncementBySlug = (slug: string) => {
 
 // Mutation hooks for announcements
 export const useCreateAnnouncement = () => {
-  return useMutation(api.announcements.createAnnouncement);
+  return useAdminMutation(api.announcements.createAnnouncement);
 };
 
 export const useUpdateAnnouncement = () => {
-  return useMutation(api.announcements.updateAnnouncement);
+  return useAdminMutation(api.announcements.updateAnnouncement);
 };
 
 export const useDeleteAnnouncement = () => {
-  return useMutation(api.announcements.deleteAnnouncement);
+  return useAdminMutation(api.announcements.deleteAnnouncement);
 };
 
 export const useToggleAnnouncementPublication = () => {
-  return useMutation(api.announcements.toggleAnnouncementPublication);
+  return useAdminMutation(api.announcements.toggleAnnouncementPublication);
 };
 
 export const useUpdateSortOrder = () => {
-  return useMutation(api.announcements.updateSortOrder);
+  return useAdminMutation(api.announcements.updateSortOrder);
 };
 
 // Type exports

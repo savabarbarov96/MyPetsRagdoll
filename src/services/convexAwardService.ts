@@ -1,3 +1,5 @@
+import { useOptionalAdminQuery } from "@/lib/adminConvex";
+import { useAdminMutation, useAdminQuery } from "@/lib/adminConvex";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -28,7 +30,7 @@ export interface AwardCategoryWithCount {
 
 // Hook to get all awards (admin use)
 export const useAllAwards = () => {
-  return useQuery(api.awards.getAllAwards);
+  return useAdminQuery(api.awards.getAllAwards);
 };
 
 // Hook to get published awards
@@ -43,7 +45,7 @@ export const useAwardsByCategory = (category: AwardCategory) => {
 
 // Hook to get single award by ID
 export const useAwardById = (id: Id<"awards">) => {
-  return useQuery(api.awards.getAwardById, { id });
+  return useOptionalAdminQuery(api.awards.getAwardById, { id });
 };
 
 // Hook to get awards for a specific cat
@@ -58,27 +60,27 @@ export const useAwardCategoriesWithCounts = () => {
 
 // Create award mutation
 export const useCreateAward = () => {
-  return useMutation(api.awards.createAward);
+  return useAdminMutation(api.awards.createAward);
 };
 
 // Update award mutation
 export const useUpdateAward = () => {
-  return useMutation(api.awards.updateAward);
+  return useAdminMutation(api.awards.updateAward);
 };
 
 // Toggle publication status mutation
 export const useToggleAwardPublication = () => {
-  return useMutation(api.awards.toggleAwardPublication);
+  return useAdminMutation(api.awards.toggleAwardPublication);
 };
 
 // Delete award mutation
 export const useDeleteAward = () => {
-  return useMutation(api.awards.deleteAward);
+  return useAdminMutation(api.awards.deleteAward);
 };
 
 // Update sort order mutation
 export const useUpdateAwardSortOrder = () => {
-  return useMutation(api.awards.updateSortOrder);
+  return useAdminMutation(api.awards.updateSortOrder);
 };
 
 // Utility function to format award date

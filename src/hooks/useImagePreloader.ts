@@ -54,7 +54,7 @@ export const useImagePreloader = (): UseImagePreloaderReturn => {
       
       // Set fetchPriority if supported
       if ('fetchPriority' in img && options.fetchPriority) {
-        (img as any).fetchPriority = options.fetchPriority;
+        img.fetchPriority = options.fetchPriority;
       }
       
       img.onload = () => {

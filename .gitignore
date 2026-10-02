@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local browser verification artifacts
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example

@@ -65,12 +65,12 @@ const SocialMediaSettings = () => {
           acc[setting.key] = setting.value;
         }
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, string>);
 
       setAnalyticsData({
-        googleSearchConsole: settings.google_search_console || '',
-        metaPixelId: settings.meta_pixel_id || '',
-        googleAnalyticsId: settings.google_analytics_id || '',
+        googleSearchConsole: typeof settings.google_search_console === 'string' ? settings.google_search_console : '',
+        metaPixelId: typeof settings.meta_pixel_id === 'string' ? settings.meta_pixel_id : '',
+        googleAnalyticsId: typeof settings.google_analytics_id === 'string' ? settings.google_analytics_id : '',
       });
     }
   }, [analyticsSettings]);
@@ -79,10 +79,10 @@ const SocialMediaSettings = () => {
   useEffect(() => {
     if (locationSettings) {
       setLocationData({
-        address: locationSettings.establishment_address || '',
-        displayName: locationSettings.location_display_name || '',
-        googleMapsUrl: locationSettings.google_maps_url || '',
-        appleMapsUrl: locationSettings.apple_maps_url || '',
+        address: typeof locationSettings.establishment_address === 'string' ? locationSettings.establishment_address : '',
+        displayName: typeof locationSettings.location_display_name === 'string' ? locationSettings.location_display_name : '',
+        googleMapsUrl: typeof locationSettings.google_maps_url === 'string' ? locationSettings.google_maps_url : '',
+        appleMapsUrl: typeof locationSettings.apple_maps_url === 'string' ? locationSettings.apple_maps_url : '',
       });
     }
   }, [locationSettings]);

@@ -1,10 +1,14 @@
+import { requireAdmin, findAdminSession } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // Get all TikTok videos
 export const getAllVideos = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("tiktokVideos")
       .withIndex("by_sort_order")
@@ -79,19 +83,20 @@ export const getVideosForMainSection = query({
 
 // Get video by ID
 export const getVideoById = query({
-  args: { id: v.optional(v.id("tiktokVideos")) },
+  args: { sessionId: v.optional(v.string()), id: v.optional(v.id("tiktokVideos")) },
   handler: async (ctx, args) => {
     // Return null if no id provided
     if (!args.id) {
       return null;
     }
-    return await ctx.db.get(args.id!);
+    const record = await ctx.db.get(args.id!);
+    return record && (record.isActive || await findAdminSession(ctx, args.sessionId)) ? record : null;
   },
 });
 
 // Create new TikTok video
 export const createVideo = mutation({
-  args: {
+  args: { sessionId: v.string(),
     catId: v.optional(v.id("cats")),
     videoUrl: v.string(),
     embedId: v.optional(v.string()),
@@ -106,6 +111,8 @@ export const createVideo = mutation({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Get the highest sort order and increment
     const lastVideo = await ctx.db
       .query("tiktokVideos")
@@ -116,8 +123,8 @@ export const createVideo = mutation({
     const sortOrder = lastVideo ? lastVideo.sortOrder + 1 : 1;
 
     const videoId = await ctx.db.insert("tiktokVideos", {
-      ...args,
-      isActive: args.isActive ?? true,
+      ...input,
+      isActive: input.isActive ?? true,
       sortOrder,
     });
 
@@ -127,7 +134,7 @@ export const createVideo = mutation({
 
 // Update TikTok video
 export const updateVideo = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("tiktokVideos"),
     catId: v.optional(v.id("cats")),
     videoUrl: v.optional(v.string()),
@@ -144,7 +151,9 @@ export const updateVideo = mutation({
     sortOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updates } = input;
     
     // Remove undefined values
     const cleanUpdates = Object.fromEntries(
@@ -158,37 +167,43 @@ export const updateVideo = mutation({
 
 // Delete TikTok video
 export const deleteVideo = mutation({
-  args: { id: v.id("tiktokVideos") },
+  args: { sessionId: v.string(), id: v.id("tiktokVideos") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.id);
     return { success: true };
   },
 });
 
 // Toggle video active status
 export const toggleVideoActive = mutation({
-  args: { id: v.id("tiktokVideos") },
+  args: { sessionId: v.string(), id: v.id("tiktokVideos") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const video = await ctx.db.get(input.id);
     if (!video) {
       throw new Error("Video not found");
     }
 
-    await ctx.db.patch(args.id, { isActive: !video.isActive });
-    return await ctx.db.get(args.id);
+    await ctx.db.patch(input.id, { isActive: !video.isActive });
+    return await ctx.db.get(input.id);
   },
 });
 
 // Bulk update video order
 export const updateVideoOrder = mutation({
-  args: {
+  args: { sessionId: v.string(),
     videoIds: v.array(v.id("tiktokVideos")),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const results = [];
     
-    for (let i = 0; i < args.videoIds.length; i++) {
-      const videoId = args.videoIds[i];
+    for (let i = 0; i < input.videoIds.length; i++) {
+      const videoId = input.videoIds[i];
       await ctx.db.patch(videoId, { sortOrder: i + 1 });
       const updatedVideo = await ctx.db.get(videoId);
       results.push(updatedVideo);
@@ -200,7 +215,10 @@ export const updateVideoOrder = mutation({
 
 // Get video statistics
 export const getVideoStatistics = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const allVideos = await ctx.db.query("tiktokVideos").collect();
     const activeVideos = allVideos.filter(v => v.isActive);
     const catVideos = allVideos.filter(v => v.catId);

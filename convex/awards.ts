@@ -1,10 +1,13 @@
+import { requireAdmin, findAdminSession } from "./lib/admin";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Get all awards (admin use)
 export const getAllAwards = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionId: v.string(),},
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("awards")
       .order("desc")
@@ -26,7 +29,7 @@ export const getPublishedAwards = query({
     )),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db
+    const query = ctx.db
       .query("awards")
       .withIndex("by_published", (q) => q.eq("isPublished", true))
       .order("desc");
@@ -80,9 +83,10 @@ export const getAwardsByCategory = query({
 
 // Get single award by ID
 export const getAwardById = query({
-  args: { id: v.id("awards") },
+  args: { sessionId: v.optional(v.string()), id: v.id("awards") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const record = await ctx.db.get(args.id);
+    return record && (record.isPublished || await findAdminSession(ctx, args.sessionId)) ? record : null;
   },
 });
 
@@ -101,7 +105,7 @@ export const getAwardsByCat = query({
 
 // Create new award
 export const createAward = mutation({
-  args: {
+  args: { sessionId: v.string(),
     title: v.string(),
     description: v.string(),
     awardDate: v.number(),
@@ -119,22 +123,24 @@ export const createAward = mutation({
     achievements: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Get the highest sort order and add 1
     const awards = await ctx.db.query("awards").collect();
     const maxSortOrder = Math.max(...awards.map(a => a.sortOrder), 0);
 
     return await ctx.db.insert("awards", {
-      title: args.title,
-      description: args.description,
-      awardDate: args.awardDate,
-      awardingOrganization: args.awardingOrganization,
-      category: args.category,
-      certificateImage: args.certificateImage,
-      galleryImages: args.galleryImages || [],
-      associatedCatId: args.associatedCatId,
+      title: input.title,
+      description: input.description,
+      awardDate: input.awardDate,
+      awardingOrganization: input.awardingOrganization,
+      category: input.category,
+      certificateImage: input.certificateImage,
+      galleryImages: input.galleryImages || [],
+      associatedCatId: input.associatedCatId,
       isPublished: false, // Default to unpublished
       sortOrder: maxSortOrder + 1,
-      achievements: args.achievements,
+      achievements: input.achievements,
       updatedAt: Date.now(),
     });
   },
@@ -142,7 +148,7 @@ export const createAward = mutation({
 
 // Update award
 export const updateAward = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("awards"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -161,7 +167,9 @@ export const updateAward = mutation({
     achievements: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updates } = input;
     
     // Remove undefined values
     const cleanUpdates = Object.fromEntries(
@@ -178,14 +186,16 @@ export const updateAward = mutation({
 
 // Toggle award publication status
 export const toggleAwardPublication = mutation({
-  args: { id: v.id("awards") },
+  args: { sessionId: v.string(), id: v.id("awards") },
   handler: async (ctx, args) => {
-    const award = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const award = await ctx.db.get(input.id);
     if (!award) {
       throw new Error("Award not found");
     }
 
-    await ctx.db.patch(args.id, {
+    await ctx.db.patch(input.id, {
       isPublished: !award.isPublished,
       updatedAt: Date.now(),
     });
@@ -196,21 +206,25 @@ export const toggleAwardPublication = mutation({
 
 // Delete award
 export const deleteAward = mutation({
-  args: { id: v.id("awards") },
+  args: { sessionId: v.string(), id: v.id("awards") },
   handler: async (ctx, args) => {
-    return await ctx.db.delete(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    return await ctx.db.delete(input.id);
   },
 });
 
 // Update sort order
 export const updateSortOrder = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("awards"),
     sortOrder: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.patch(args.id, {
-      sortOrder: args.sortOrder,
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    return await ctx.db.patch(input.id, {
+      sortOrder: input.sortOrder,
       updatedAt: Date.now(),
     });
   },

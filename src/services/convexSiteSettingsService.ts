@@ -1,31 +1,24 @@
+import { useAdminMutation, useAdminQuery } from "@/lib/adminConvex";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
 // Query hooks for site settings
 export const useAllSiteSettings = () => {
-  return useQuery(api.siteSettings.getAllSettings);
+  return useAdminQuery(api.siteSettings.getAllSettings);
 };
 
 export const useSettingsByType = (type: 'social_media' | 'contact_info' | 'site_content' | 'feature_toggle' | 'analytics' | 'seo' | 'location') => {
-  return useQuery(api.siteSettings.getSettingsByType, { type });
+  return useAdminQuery(api.siteSettings.getSettingsByType, { type });
 };
 
 export const useSettingByKey = (key: string) => {
-  return useQuery(api.siteSettings.getSettingByKey, { key });
+  return useAdminQuery(api.siteSettings.getSettingByKey, { key });
 };
 
 export const useSocialMediaSettings = () => {
   const settings = useQuery(api.siteSettings.getSocialMediaSettings);
-  if (!settings || typeof settings.instagram_url !== "string") return settings;
-
-  // Replace legacy profile URLs already stored in site settings.
-  const instagramUrl = settings.instagram_url.replace(
-    /^https?:\/\/(?:www\.)?instagram\.com\/(?:radanovpride|bleuroi\.ragdoll)\/?(?:\?.*)?$/i,
-    "https://www.instagram.com/bleuroi_cattery_ragdol_british/",
-  );
-  const updatedSettings: typeof settings = { ...settings, instagram_url: instagramUrl };
-  return updatedSettings;
+  return settings;
 };
 
 export const useLocationSettings = () => {
@@ -34,23 +27,23 @@ export const useLocationSettings = () => {
 
 // Mutation hooks for site settings
 export const useUpsertSetting = () => {
-  return useMutation(api.siteSettings.upsertSetting);
+  return useAdminMutation(api.siteSettings.upsertSetting);
 };
 
 export const useUpdateSocialMediaSettings = () => {
-  return useMutation(api.siteSettings.updateSocialMediaSettings);
+  return useAdminMutation(api.siteSettings.updateSocialMediaSettings);
 };
 
 export const useUpdateLocationSettings = () => {
-  return useMutation(api.siteSettings.updateLocationSettings);
+  return useAdminMutation(api.siteSettings.updateLocationSettings);
 };
 
 export const useDeleteSetting = () => {
-  return useMutation(api.siteSettings.deleteSetting);
+  return useAdminMutation(api.siteSettings.deleteSetting);
 };
 
 export const useInitializeDefaultSettings = () => {
-  return useMutation(api.siteSettings.initializeDefaultSettings);
+  return useAdminMutation(api.siteSettings.initializeDefaultSettings);
 };
 
 // Type exports

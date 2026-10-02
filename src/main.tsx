@@ -9,6 +9,7 @@ import convex from './lib/convex.ts'
 import { AdminAuthProvider } from './hooks/useAdminAuth.tsx'
 import { ThemeProvider } from './hooks/useTheme.tsx'
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './index.css'
 
 const queryClient = new QueryClient();
@@ -22,7 +23,7 @@ createRoot(document.getElementById('root')!).render(
             <TooltipProvider>
               <ThemeProvider>
                 <AdminAuthProvider>
-                  <App />
+                  <ErrorBoundary><App /></ErrorBoundary>
                 </AdminAuthProvider>
               </ThemeProvider>
             </TooltipProvider>
@@ -32,3 +33,14 @@ createRoot(document.getElementById('root')!).render(
     </HelmetProvider>
   </StrictMode>,
 )
+
+// Clear only this application's obsolete dynamic/API caches.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(async registrations => {
+    for (const registration of registrations) {
+      const script = registration.active?.scriptURL || registration.waiting?.scriptURL;
+      if (script && new URL(script).pathname === '/sw.js') await registration.unregister();
+    }
+    for (const name of await caches.keys()) if (name.startsWith('mypetsragdoll-')) await caches.delete(name);
+  }).catch(() => {});
+}

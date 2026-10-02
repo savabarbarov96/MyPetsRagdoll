@@ -1,203 +1,59 @@
 import { useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useSettingsByType } from '@/services/convexSiteSettingsService';
+import { useLocation } from 'react-router-dom';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useConsent } from '@/components/privacy/ConsentProvider';
 
+type Pixel = ((...args: unknown[]) => void) & { queue: unknown[][]; callMethod?: (...args: unknown[]) => void; loaded: boolean; version: string; push?: Pixel };
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
-    fbq?: (...args: unknown[]) => void;
+    fbq?: Pixel;
   }
 }
-
-const Analytics = () => {
-  const analyticsSettings = useSettingsByType('analytics');
-  const seoSettings = useSettingsByType('seo');
-
-  // Parse settings into usable format
-  const settings = analyticsSettings?.reduce((acc, setting) => {
-    try {
-      acc[setting.key] = JSON.parse(setting.value);
-    } catch {
-      acc[setting.key] = setting.value;
-    }
-    return acc;
-  }, {} as Record<string, string>) || {};
-
-  const seoData = seoSettings?.reduce((acc, setting) => {
-    try {
-      acc[setting.key] = JSON.parse(setting.value);
-    } catch {
-      acc[setting.key] = setting.value;
-    }
-    return acc;
-  }, {} as Record<string, string>) || {};
-
-  const googleAnalyticsId = settings.google_analytics_id;
-  const metaPixelId = settings.meta_pixel_id;
-  const googleSearchConsole = settings.google_search_console;
-
-  // Get current page SEO data
-  const currentPath = window.location.pathname;
-  let pageSeoData = seoData.home_seo_title ? {
-    title: seoData.home_seo_title,
-    description: seoData.home_seo_description,
-    keywords: seoData.home_seo_keywords
-  } : {};
-
-  if (currentPath.includes('gallery')) {
-    pageSeoData = {
-      title: seoData.gallery_seo_title || pageSeoData.title,
-      description: seoData.gallery_seo_description || pageSeoData.description,
-      keywords: seoData.gallery_seo_keywords || pageSeoData.keywords
-    };
-  } else if (currentPath.includes('contact')) {
-    pageSeoData = {
-      title: seoData.contact_seo_title || pageSeoData.title,
-      description: seoData.contact_seo_description || pageSeoData.description,
-      keywords: seoData.contact_seo_keywords || pageSeoData.keywords
-    };
-  }
-
-  // Initialize Google Analytics
+export default function Analytics() {
+  const { analytics, marketing } = useConsent();
+  const { pathname } = useLocation();
+  const records = useQuery(api.siteSettings.getPublicTrackingSettings);
+  const settings = Object.fromEntries((records || []).map(record => {
+    let value: unknown = record.value;
+    try { value = JSON.parse(record.value); } catch { /* Legacy unquoted setting. */ }
+    return [record.key, value];
+  }));
+  const gaId = typeof settings?.google_analytics_id === 'string' && /^G-[A-Z0-9]+$/.test(settings.google_analytics_id) ? settings.google_analytics_id : undefined;
+  const pixelId = typeof settings?.meta_pixel_id === 'string' && /^\d+$/.test(settings.meta_pixel_id) ? settings.meta_pixel_id : undefined;
   useEffect(() => {
-    if (!googleAnalyticsId) return;
-
-    // Load Google Analytics script
+    if (!analytics || !gaId) return;
+    const flags = window as unknown as Record<string, unknown>;
+    flags[`ga-disable-${gaId}`] = false;
+    window.dataLayer ||= [];
+    window.gtag = (...args: unknown[]) => { window.dataLayer?.push(args); };
+    window.gtag('consent', 'default', {analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+    window.gtag('js', new Date());
+    window.gtag('config', gaId, {send_page_view:false});
     const script = document.createElement('script');
     script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
     document.head.appendChild(script);
-
-    // Initialize Google Analytics
-    window.dataLayer = window.dataLayer || [];
-    function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args);
-    }
-    window.gtag = gtag;
-
-    gtag('js', new Date());
-    gtag('config', googleAnalyticsId, {
-      page_title: pageSeoData.title || document.title,
-      page_location: window.location.href,
-    });
-
-    return () => {
-      // Cleanup script on unmount
-      const scriptElement = document.querySelector(`script[src*="${googleAnalyticsId}"]`);
-      if (scriptElement) {
-        document.head.removeChild(scriptElement);
-      }
-    };
-  }, [googleAnalyticsId, pageSeoData.title]);
-
-  // Initialize Meta Pixel
+    return () => { flags[`ga-disable-${gaId}`] = true; window.gtag?.('consent', 'update', {analytics_storage:'denied'}); script.remove(); };
+  }, [analytics, gaId]);
   useEffect(() => {
-    if (!metaPixelId) return;
-
-    // Meta Pixel initialization code
-    (function(f: Window, b: Document, e: string, v: string) {
-      interface FacebookPixel {
-        (...args: unknown[]): void;
-        callMethod?: {
-          apply: (thisArg: unknown, args: unknown[]) => void;
-        };
-        queue: unknown[];
-        push: FacebookPixel;
-        loaded: boolean;
-        version: string;
-      }
-
-      if ((f as typeof window & { fbq?: FacebookPixel }).fbq) return; 
-      const n: FacebookPixel = function(...args: unknown[]) {
-        n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
-      } as FacebookPixel;
-      
-      if (!(f as typeof window & { _fbq?: FacebookPixel })._fbq) {
-        (f as typeof window & { _fbq?: FacebookPixel })._fbq = n;
-      }
-      
-      n.push = n; 
-      n.loaded = true; 
-      n.version = '2.0';
-      n.queue = []; 
-      
-      const t = b.createElement(e) as HTMLScriptElement; 
-      t.async = true;
-      t.src = v; 
-      const s = b.getElementsByTagName(e)[0];
-      s.parentNode?.insertBefore(t, s);
-      
-      (f as typeof window & { fbq?: FacebookPixel }).fbq = n;
-    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-
-    window.fbq?.('init', metaPixelId);
-    window.fbq?.('track', 'PageView');
-
-    return () => {
-      // Cleanup on unmount
-      const scriptElement = document.querySelector('script[src*="fbevents.js"]');
-      if (scriptElement) {
-        document.head.removeChild(scriptElement);
-      }
-    };
-  }, [metaPixelId]);
-
-  return (
-    <Helmet>
-      {/* SEO Meta Tags */}
-      {pageSeoData.title && (
-        <title>{pageSeoData.title}</title>
-      )}
-      {pageSeoData.description && (
-        <meta name="description" content={pageSeoData.description} />
-      )}
-      {pageSeoData.keywords && (
-        <meta name="keywords" content={pageSeoData.keywords} />
-      )}
-
-      {/* Google Search Console Verification */}
-      {googleSearchConsole && (
-        <meta name="google-site-verification" content={googleSearchConsole} />
-      )}
-
-      {/* Open Graph Meta Tags */}
-      {pageSeoData.title && (
-        <meta property="og:title" content={pageSeoData.title} />
-      )}
-      {pageSeoData.description && (
-        <meta property="og:description" content={pageSeoData.description} />
-      )}
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={window.location.href} />
-      <meta property="og:site_name" content="BleuRoi Ragdoll Cattery" />
-      
-      {/* Twitter Card Meta Tags */}
-      <meta name="twitter:card" content="summary_large_image" />
-      {pageSeoData.title && (
-        <meta name="twitter:title" content={pageSeoData.title} />
-      )}
-      {pageSeoData.description && (
-        <meta name="twitter:description" content={pageSeoData.description} />
-      )}
-
-      {/* Canonical URL */}
-      <link rel="canonical" href={window.location.href} />
-
-      {/* Meta Pixel noscript fallback */}
-      {metaPixelId && (
-        <noscript>
-          <img 
-            height="1" 
-            width="1" 
-            style={{ display: 'none' }}
-            src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`}
-            alt=""
-          />
-        </noscript>
-      )}
-    </Helmet>
-  );
-};
-
-export default Analytics;
+    if (analytics && gaId) window.gtag?.('event', 'page_view', {page_path:pathname,page_location:window.location.origin+pathname,page_title:document.title});
+  }, [analytics, gaId, pathname]);
+  useEffect(() => {
+    if (!marketing || !pixelId) return;
+    const pixel: Pixel = Object.assign((...args: unknown[]) => { if (pixel.callMethod) pixel.callMethod(...args); else pixel.queue.push(args); }, {queue:[] as unknown[][],loaded:true,version:'2.0'});
+    pixel.push = pixel;
+    window.fbq = pixel;
+    window.fbq('consent', 'grant');
+    window.fbq('init', pixelId);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(script);
+    return () => { window.fbq?.('consent', 'revoke'); script.remove(); };
+  }, [marketing, pixelId]);
+  useEffect(() => { if (marketing && pixelId) window.fbq?.('track', 'PageView'); }, [marketing, pixelId, pathname]);
+  return null;
+}

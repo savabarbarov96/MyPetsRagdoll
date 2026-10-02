@@ -1,10 +1,15 @@
+import { publicCat } from "./lib/publicCat";
+import { requireAdmin, findAdminSession } from "./lib/admin";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 
 // Get all cats
 export const getAllCats = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db.query("cats").collect();
   },
 });
@@ -12,28 +17,31 @@ export const getAllCats = query({
 // Get displayed cats only
 export const getDisplayedCats = query({
   handler: async (ctx) => {
-    return await ctx.db
+    return (await ctx.db
       .query("cats")
       .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
-      .collect();
+      .collect()).map(publicCat);
   },
 });
 
 // Get cat by ID
 export const getCatById = query({
-  args: { id: v.optional(v.id("cats")) },
+  args: { sessionId: v.optional(v.string()), id: v.optional(v.id("cats")) },
   handler: async (ctx, args) => {
     // Return null if no id provided
     if (!args.id) {
       return null;
     }
-    return await ctx.db.get(args.id!);
+    const record = await ctx.db.get(args.id!);
+    if (!record) return null;
+    const admin = await findAdminSession(ctx, args.sessionId);
+    return record.isDisplayed || admin ? (admin ? record : publicCat(record)) : null;
   },
 });
 
 // Optimized search cats by various criteria using indexes
 export const searchCats = query({
-  args: {
+  args: { sessionId: v.string(),
     searchTerm: v.optional(v.string()),
     gender: v.optional(v.union(v.literal("male"), v.literal("female"))),
     isDisplayed: v.optional(v.boolean()),
@@ -41,48 +49,50 @@ export const searchCats = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 100; // Default limit to prevent large responses
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const limit = input.limit || 100; // Default limit to prevent large responses
     
     // Use indexed queries when possible for better performance
     let cats;
     
-    if (args.gender && args.isDisplayed !== undefined) {
+    if (input.gender && input.isDisplayed !== undefined) {
       // Use compound index if available, otherwise filter
-      if (args.isDisplayed) {
+      if (input.isDisplayed) {
         cats = await ctx.db
           .query("cats")
           .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
-          .filter((q) => q.eq(q.field("gender"), args.gender!))
+          .filter((q) => q.eq(q.field("gender"), input.gender!))
           .take(limit);
       } else {
         cats = await ctx.db
           .query("cats")
-          .withIndex("by_gender", (q) => q.eq("gender", args.gender!))
+          .withIndex("by_gender", (q) => q.eq("gender", input.gender!))
           .filter((q) => q.eq(q.field("isDisplayed"), false))
           .take(limit);
       }
-    } else if (args.gender) {
+    } else if (input.gender) {
       cats = await ctx.db
         .query("cats")
-        .withIndex("by_gender", (q) => q.eq("gender", args.gender!))
+        .withIndex("by_gender", (q) => q.eq("gender", input.gender!))
         .take(limit);
-    } else if (args.isDisplayed !== undefined) {
+    } else if (input.isDisplayed !== undefined) {
       cats = await ctx.db
         .query("cats")
-        .withIndex("by_displayed", (q) => q.eq("isDisplayed", args.isDisplayed!))
+        .withIndex("by_displayed", (q) => q.eq("isDisplayed", input.isDisplayed!))
         .take(limit);
-    } else if (args.category && args.category !== "all") {
+    } else if (input.category && input.category !== "all") {
       cats = await ctx.db
         .query("cats")
-        .withIndex("by_category", (q) => q.eq("category", args.category))
+        .withIndex("by_category", (q) => q.eq("category", input.category))
         .take(limit);
     } else {
       cats = await ctx.db.query("cats").take(limit);
     }
 
     // Apply search term filter if provided (this is done post-query for text search)
-    if (args.searchTerm) {
-      const term = args.searchTerm.toLowerCase();
+    if (input.searchTerm) {
+      const term = input.searchTerm.toLowerCase();
       cats = cats.filter(cat => 
         cat.name.toLowerCase().includes(term) ||
         cat.subtitle.toLowerCase().includes(term) ||
@@ -98,7 +108,7 @@ export const searchCats = query({
 
 // Create a new cat
 export const createCat = mutation({
-  args: {
+  args: { sessionId: v.string(),
     name: v.string(),
     subtitle: v.string(),
     image: v.string(),
@@ -120,10 +130,12 @@ export const createCat = mutation({
     breed: v.optional(v.union(v.literal("ragdoll"), v.literal("british"))),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const catId = await ctx.db.insert("cats", {
-      ...args,
-      isDisplayed: args.isDisplayed ?? true,
-      breed: args.breed ?? "ragdoll",
+      ...input,
+      isDisplayed: input.isDisplayed ?? true,
+      breed: input.breed ?? "ragdoll",
     });
     return catId;
   },
@@ -131,7 +143,7 @@ export const createCat = mutation({
 
 // Update an existing cat
 export const updateCat = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("cats"),
     name: v.optional(v.string()),
     subtitle: v.optional(v.string()),
@@ -154,7 +166,9 @@ export const updateCat = mutation({
     breed: v.optional(v.union(v.literal("ragdoll"), v.literal("british"))),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updates } = input;
     
     // Remove undefined values
     const cleanUpdates = Object.fromEntries(
@@ -168,17 +182,19 @@ export const updateCat = mutation({
 
 // Delete a cat
 export const deleteCat = mutation({
-  args: { id: v.id("cats") },
+  args: { sessionId: v.string(), id: v.id("cats") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // First, remove all pedigree connections involving this cat
     const parentConnections = await ctx.db
       .query("pedigreeConnections")
-      .withIndex("by_parent", (q) => q.eq("parentId", args.id))
+      .withIndex("by_parent", (q) => q.eq("parentId", input.id))
       .collect();
     
     const childConnections = await ctx.db
       .query("pedigreeConnections")
-      .withIndex("by_child", (q) => q.eq("childId", args.id))
+      .withIndex("by_child", (q) => q.eq("childId", input.id))
       .collect();
 
     // Delete all connections
@@ -189,7 +205,7 @@ export const deleteCat = mutation({
     // Delete any pedigree trees rooted at this cat
     const pedigreeTrees = await ctx.db
       .query("pedigreeTrees")
-      .withIndex("by_root_cat", (q) => q.eq("rootCatId", args.id))
+      .withIndex("by_root_cat", (q) => q.eq("rootCatId", input.id))
       .collect();
 
     for (const tree of pedigreeTrees) {
@@ -197,36 +213,40 @@ export const deleteCat = mutation({
     }
 
     // Finally, delete the cat
-    await ctx.db.delete(args.id);
+    await ctx.db.delete(input.id);
     return { success: true };
   },
 });
 
 // Toggle cat display status
 export const toggleCatDisplay = mutation({
-  args: { id: v.id("cats") },
+  args: { sessionId: v.string(), id: v.id("cats") },
   handler: async (ctx, args) => {
-    const cat = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const cat = await ctx.db.get(input.id);
     if (!cat) {
       throw new Error("Cat not found");
     }
 
-    await ctx.db.patch(args.id, { isDisplayed: !cat.isDisplayed });
-    return await ctx.db.get(args.id);
+    await ctx.db.patch(input.id, { isDisplayed: !cat.isDisplayed });
+    return await ctx.db.get(input.id);
   },
 });
 
 // Bulk update display status
 export const bulkUpdateDisplay = mutation({
-  args: {
+  args: { sessionId: v.string(),
     catIds: v.array(v.id("cats")),
     isDisplayed: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const results = [];
     
-    for (const catId of args.catIds) {
-      await ctx.db.patch(catId, { isDisplayed: args.isDisplayed });
+    for (const catId of input.catIds) {
+      await ctx.db.patch(catId, { isDisplayed: input.isDisplayed });
       const updatedCat = await ctx.db.get(catId);
       results.push(updatedCat);
     }
@@ -237,20 +257,24 @@ export const bulkUpdateDisplay = mutation({
 
 // Get cats by gender for breeding purposes
 export const getCatsByGender = query({
-  args: { gender: v.union(v.literal("male"), v.literal("female")) },
+  args: { sessionId: v.string(), gender: v.union(v.literal("male"), v.literal("female")) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("cats")
-      .withIndex("by_gender", (q) => q.eq("gender", args.gender))
+      .withIndex("by_gender", (q) => q.eq("gender", input.gender))
       .collect();
   },
 });
 
 // Get recent cats (last 10 added)
 export const getRecentCats = query({
-  args: { limit: v.optional(v.number()) },
+  args: { sessionId: v.string(), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 10;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const limit = input.limit || 10;
     return await ctx.db
       .query("cats")
       .order("desc")
@@ -260,7 +284,10 @@ export const getRecentCats = query({
 
 // Optimized cat statistics using indexed queries
 export const getCatStatistics = query({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Use Promise.all to run queries in parallel for better performance
     const [allCatsCount, displayedCats, males, females] = await Promise.all([
       ctx.db.query("cats").collect().then(cats => cats.length),
@@ -289,15 +316,17 @@ export const getCatStatistics = query({
 
 // Get cats by category for gallery filtering
 export const getCatsByCategory = query({
-  args: { category: v.union(v.literal("kitten"), v.literal("adult"), v.literal("all")) },
+  args: { sessionId: v.string(), category: v.union(v.literal("kitten"), v.literal("adult"), v.literal("all")) },
   handler: async (ctx, args) => {
-    if (args.category === "all") {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    if (input.category === "all") {
       return await ctx.db.query("cats").collect();
     }
     
     return await ctx.db
       .query("cats")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("by_category", (q) => q.eq("category", input.category))
       .collect();
   },
 });
@@ -312,10 +341,10 @@ export const getDisplayedCatsByCategory = query({
     const limit = args.limit || 50; // Default limit for performance
     
     if (args.category === "all") {
-      return await ctx.db
+      return (await ctx.db
         .query("cats")
         .withIndex("by_displayed", (q) => q.eq("isDisplayed", true))
-        .take(limit);
+        .take(limit)).map(publicCat);
     }
     
     // Try to use compound index first for better performance
@@ -328,7 +357,7 @@ export const getDisplayedCatsByCategory = query({
     
     // If we have enough results from the index, return them
     if (catsFromIndex.length >= Math.min(limit, 10)) {
-      return catsFromIndex;
+      return catsFromIndex.map(publicCat);
     }
     
     // Fallback to age-based calculation for cats without category set
@@ -368,7 +397,7 @@ export const getDisplayedCatsByCategory = query({
       }
     });
     
-    return combinedResults.slice(0, limit);
+    return combinedResults.slice(0, limit).map(publicCat);
   },
 });
 
@@ -414,7 +443,7 @@ export const getDisplayedCatsByGenderAndAge = query({
         default:
           return false;
       }
-    });
+    }).map(publicCat);
   },
 });
 
@@ -457,24 +486,29 @@ export const getDisplayedCatsByBreedGenderAndAge = query({
         default:
           return false;
       }
-    });
+    }).map(publicCat);
   },
 });
 
 // Get all cats by breed (for admin)
 export const getCatsByBreed = query({
-  args: { breed: v.union(v.literal("ragdoll"), v.literal("british")) },
+  args: { sessionId: v.string(), breed: v.union(v.literal("ragdoll"), v.literal("british")) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     return await ctx.db
       .query("cats")
-      .withIndex("by_breed", (q) => q.eq("breed", args.breed))
+      .withIndex("by_breed", (q) => q.eq("breed", input.breed))
       .collect();
   },
 });
 
 // Migration: backfill existing cats with breed: "ragdoll"
 export const migrateExistingCatsToRagdoll = mutation({
-  handler: async (ctx) => {
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const allCats = await ctx.db.query("cats").collect();
     let migrated = 0;
     for (const cat of allCats) {
@@ -489,20 +523,22 @@ export const migrateExistingCatsToRagdoll = mutation({
 
 // Bulk update category for existing cats (optimized)
 export const bulkUpdateCategory = mutation({
-  args: {
+  args: { sessionId: v.string(),
     catIds: v.array(v.id("cats")),
     category: v.optional(v.union(v.literal("kitten"), v.literal("adult"), v.literal("all"))),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Use Promise.all for parallel updates
-    const updatePromises = args.catIds.map(catId => 
-      ctx.db.patch(catId, { category: args.category })
+    const updatePromises = input.catIds.map(catId =>
+      ctx.db.patch(catId, { category: input.category })
     );
     
     await Promise.all(updatePromises);
     
     // Fetch updated cats in parallel
-    const fetchPromises = args.catIds.map(catId => ctx.db.get(catId));
+    const fetchPromises = input.catIds.map(catId => ctx.db.get(catId));
     const results = await Promise.all(fetchPromises);
     
     return results.filter(cat => cat !== null);
@@ -511,7 +547,7 @@ export const bulkUpdateCategory = mutation({
 
 // Paginated cats query for better performance on large datasets
 export const getPaginatedCats = query({
-  args: {
+  args: { sessionId: v.string(),
     paginationOpts: v.object({
       numItems: v.number(),
       cursor: v.union(v.string(), v.null())
@@ -523,31 +559,33 @@ export const getPaginatedCats = query({
     }))
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Apply filters using indexes when possible
-    if (args.filters?.isDisplayed !== undefined) {
+    if (input.filters?.isDisplayed !== undefined) {
       return await ctx.db
         .query("cats")
         .withIndex("by_displayed", (q) => 
-          q.eq("isDisplayed", args.filters!.isDisplayed!)
+          q.eq("isDisplayed", input.filters!.isDisplayed!)
         )
-        .paginate(args.paginationOpts);
-    } else if (args.filters?.gender) {
+        .paginate(input.paginationOpts);
+    } else if (input.filters?.gender) {
       return await ctx.db
         .query("cats")
         .withIndex("by_gender", (q) => 
-          q.eq("gender", args.filters!.gender!)
+          q.eq("gender", input.filters!.gender!)
         )
-        .paginate(args.paginationOpts);
-    } else if (args.filters?.category && args.filters.category !== "all") {
+        .paginate(input.paginationOpts);
+    } else if (input.filters?.category && input.filters.category !== "all") {
       return await ctx.db
         .query("cats")
         .withIndex("by_category", (q) => 
-          q.eq("category", args.filters!.category!)
+          q.eq("category", input.filters!.category!)
         )
-        .paginate(args.paginationOpts);
+        .paginate(input.paginationOpts);
     }
     
-    return await ctx.db.query("cats").paginate(args.paginationOpts);
+    return await ctx.db.query("cats").paginate(input.paginationOpts);
   },
 });
 
@@ -558,21 +596,10 @@ export const getCatsMinimal = query({
     limit: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 20;
+    const limit = Math.min(100, Math.max(1, args.limit || 20));
     
-    let cats;
-    
-    if (args.isDisplayed !== undefined) {
-      cats = await ctx.db
-        .query("cats")
-        .withIndex("by_displayed", (q) => 
-          q.eq("isDisplayed", args.isDisplayed!)
-        )
-        .take(limit);
-    } else {
-      cats = await ctx.db.query("cats").take(limit);
-    }
-    
+    const cats = await ctx.db.query("cats").withIndex("by_displayed", q => q.eq("isDisplayed", true)).take(limit);
+
     // Return only essential fields for performance
     return cats.map(cat => ({
       _id: cat._id,

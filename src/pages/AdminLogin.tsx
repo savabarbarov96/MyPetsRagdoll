@@ -43,7 +43,9 @@ const AdminLogin = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <label htmlFor="admin-password" className="text-sm font-medium">Парола</label>
               <Input
+                id="admin-password"
                 type="password"
                 placeholder="Парола"
                 value={password}

@@ -70,15 +70,15 @@ export const withImagePreloader = <P extends object>(
   criticalImages: string[] = CRITICAL_IMAGES,
   showProgress: boolean = false
 ) => {
-  return React.forwardRef<any, P>((props, ref) => {
+  return (props: P) => {
     const { isLoading } = useCriticalImagePreloader(criticalImages);
 
     if (isLoading && showProgress) {
       return <ImagePreloader criticalImages={criticalImages} showProgress />;
     }
 
-    return <WrappedComponent {...props} ref={ref} />;
-  });
+    return <WrappedComponent {...props} />;
+  };
 };
 
 // Component for preloading images in the background without UI

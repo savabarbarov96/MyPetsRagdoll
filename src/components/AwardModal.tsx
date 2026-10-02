@@ -23,9 +23,8 @@ const AwardModal = ({ award, isOpen, onClose }: AwardModalProps) => {
     setCurrentImageIndex(0);
   }, [award]);
 
-  if (!award) return null;
 
-  const allImages = [award.certificateImage, ...award.galleryImages];
+  const allImages = award ? [award.certificateImage, ...award.galleryImages] : [];
   const hasMultipleImages = allImages.length > 1;
 
   const nextImage = () => {
@@ -60,6 +59,8 @@ const AwardModal = ({ award, isOpen, onClose }: AwardModalProps) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
+
+  if (!award) return null;
 
   const modalContent = (
     <div className={`

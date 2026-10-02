@@ -1,10 +1,13 @@
+import { requireAdmin } from "./lib/admin";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // Get all hero images
 export const getHeroImages = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { sessionId: v.string(),},
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     const heroImages = await ctx.db
       .query("heroImages")
       .withIndex("by_position")
@@ -29,7 +32,7 @@ export const getActiveHeroImages = query({
 
 // Add a new hero image
 export const addHeroImage = mutation({
-  args: {
+  args: { sessionId: v.string(),
     src: v.string(),
     alt: v.string(),
     name: v.optional(v.string()),
@@ -37,6 +40,8 @@ export const addHeroImage = mutation({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Get the next position
     const existingImages = await ctx.db.query("heroImages").collect();
     const nextPosition = existingImages.length > 0 
@@ -44,11 +49,11 @@ export const addHeroImage = mutation({
       : 1;
 
     const imageId = await ctx.db.insert("heroImages", {
-      src: args.src,
-      alt: args.alt,
-      name: args.name,
-      subtitle: args.subtitle,
-      isActive: args.isActive ?? false,
+      src: input.src,
+      alt: input.alt,
+      name: input.name,
+      subtitle: input.subtitle,
+      isActive: input.isActive ?? false,
       position: nextPosition,
       uploadedAt: Date.now(),
     });
@@ -59,7 +64,7 @@ export const addHeroImage = mutation({
 
 // Update hero image
 export const updateHeroImage = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("heroImages"),
     src: v.optional(v.string()),
     alt: v.optional(v.string()),
@@ -69,7 +74,9 @@ export const updateHeroImage = mutation({
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const { id, ...updates } = input;
     
     // Remove undefined values
     const cleanUpdates = Object.fromEntries(
@@ -83,26 +90,30 @@ export const updateHeroImage = mutation({
 
 // Delete hero image
 export const deleteHeroImage = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("heroImages"),
   },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
-    return args.id;
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    await ctx.db.delete(input.id);
+    return input.id;
   },
 });
 
 // Reorder hero images
 export const reorderHeroImages = mutation({
-  args: {
+  args: { sessionId: v.string(),
     imageUpdates: v.array(v.object({
       id: v.id("heroImages"),
       position: v.number(),
     })),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
     // Update positions for all provided images
-    for (const update of args.imageUpdates) {
+    for (const update of input.imageUpdates) {
       await ctx.db.patch(update.id, { position: update.position });
     }
     
@@ -112,11 +123,13 @@ export const reorderHeroImages = mutation({
 
 // Toggle image active status
 export const toggleHeroImageActive = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("heroImages"),
   },
   handler: async (ctx, args) => {
-    const image = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const image = await ctx.db.get(input.id);
     if (!image) {
       throw new Error("Image not found");
     }
@@ -133,19 +146,21 @@ export const toggleHeroImageActive = mutation({
       }
     }
 
-    await ctx.db.patch(args.id, { isActive: !image.isActive });
-    return args.id;
+    await ctx.db.patch(input.id, { isActive: !image.isActive });
+    return input.id;
   },
 });
 
 // Move hero image up or down in order
 export const moveHeroImage = mutation({
-  args: {
+  args: { sessionId: v.string(),
     id: v.id("heroImages"),
     direction: v.union(v.literal("up"), v.literal("down")),
   },
   handler: async (ctx, args) => {
-    const currentImage = await ctx.db.get(args.id);
+    await requireAdmin(ctx, args.sessionId);
+    const { sessionId: _sessionId, ...input } = args;
+    const currentImage = await ctx.db.get(input.id);
     if (!currentImage) {
       throw new Error("Image not found");
     }
@@ -157,11 +172,11 @@ export const moveHeroImage = mutation({
       .collect();
     
     const sortedActiveImages = activeImages.sort((a, b) => a.position - b.position);
-    const currentIndex = sortedActiveImages.findIndex(img => img._id === args.id);
+    const currentIndex = sortedActiveImages.findIndex(img => img._id === input.id);
     
     if (currentIndex === -1) return; // Image not found in active list
 
-    const targetIndex = args.direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    const targetIndex = input.direction === "up" ? currentIndex - 1 : currentIndex + 1;
     
     // Check bounds
     if (targetIndex < 0 || targetIndex >= sortedActiveImages.length) return;
