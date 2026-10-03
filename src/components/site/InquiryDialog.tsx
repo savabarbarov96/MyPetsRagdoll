@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Phone, Mail, Copy, MessageCircle, ArrowRight } from "lucide-react";
+import { X, Phone, Mail, Copy, MessageCircle, ArrowRight, Instagram, Facebook, Music2, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePublicSocialLinks } from "@/hooks/usePublicContacts";
 import { COMPANY } from "@/config/site";
@@ -10,6 +10,7 @@ import {
   CONTACT_PHONE_DISPLAY,
   WHATSAPP_LINK,
 } from "@/config/contact";
+import "@/styles/inquiry.css";
 
 export interface InquiryContext {
   catId?: string;
@@ -30,6 +31,7 @@ export default function InquiryDialog({
   const { language } = useLanguage();
   const socialLinks = usePublicSocialLinks();
   const en = language === "en";
+  const opener = useRef<HTMLElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const subject = en
@@ -65,117 +67,57 @@ export default function InquiryDialog({
     >
       <Dialog.Portal>
         <Dialog.Overlay className="public-dialog-overlay" />
-        <Dialog.Content className="public-inquiry public-site">
-          <Dialog.Close
-            className="public-dialog-close"
-            aria-label={en ? "Close" : "Затвори"}
-          >
-            <X size={22} />
+        <Dialog.Content className="public-inquiry-sheet public-site"
+          onOpenAutoFocus={() => { opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; }}
+          onCloseAutoFocus={(event) => { event.preventDefault(); if (opener.current?.isConnected) opener.current.focus(); }}
+        >
+          <Dialog.Close className="inquiry-close" aria-label={en ? "Close" : "Затвори"}>
+            <X size={20} />
           </Dialog.Close>
-          <p className="public-eyebrow">
-            BleuRoi · {en ? "Let’s talk" : "Нека поговорим"}
-          </p>
-          <Dialog.Title className="public-dialog-title">
-            {en
-              ? "Your next chapter starts here."
-              : "Тук започва вашата история."}
-          </Dialog.Title>
-          <Dialog.Description>
-            {context?.name
-              ? `${en ? "Inquiry about" : "Запитване за"} ${context.name}. `
-              : ""}
-            {en
-              ? "Choose how you would like to contact us. Availability and reservation details are confirmed personally."
-              : "Изберете удобен начин за връзка. Наличността и условията за резервация се уточняват лично."}
-          </Dialog.Description>
-          <div className="public-contact-options">
-            <a
-              className="public-button"
-              href={`${WHATSAPP_LINK}?text=${encodeURIComponent(text)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <MessageCircle size={19} /> WhatsApp <ArrowRight size={18} />
+          <div className="inquiry-heading">
+            <p className="inquiry-kicker">BleuRoi · {en ? "Reservations" : "Резервации"}</p>
+            <Dialog.Title className="inquiry-title">
+              {en ? "Let’s talk." : "Нека поговорим."}
+            </Dialog.Title>
+            <Dialog.Description className="inquiry-description">
+              {en ? "Choose a channel that suits you. We confirm availability and reservation details personally." : "Изберете удобен начин за връзка. Наличността и резервацията се уточняват лично."}
+            </Dialog.Description>
+          </div>
+          {context?.name && <div className="inquiry-selection">
+            <span>{en ? "Your inquiry" : "Вашето запитване"}</span><strong>{context.name}</strong>
+          </div>}
+          <div className="inquiry-channels" aria-label={en ? "Reservation contact channels" : "Канали за резервация"}>
+            <a className="inquiry-channel inquiry-channel-primary" href={`${WHATSAPP_LINK}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="inquiry-channel-icon" size={21} /><span><strong>WhatsApp</strong><small>{en ? "Write to us" : "Пишете ни"}</small></span><ArrowUpRight size={16} />
             </a>
-            <a
-              className="public-button public-button-outline"
-              href={`mailto:${COMPANY.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}
-            >
-              <Mail size={19} />
-              {en ? "Send an email" : "Изпратете имейл"}
+            <a className="inquiry-channel" href={socialLinks.instagram} target="_blank" rel="noopener noreferrer">
+              <Instagram className="inquiry-channel-icon" size={21} /><span><strong>Instagram</strong><small>{en ? "Message our profile" : "Пишете в профила ни"}</small></span><ArrowUpRight size={16} />
             </a>
-            <a
-              className="public-button public-button-outline"
-              href={`tel:${CONTACT_PHONE_E164}`}
-            >
-              <Phone size={19} />
-              {CONTACT_PHONE_DISPLAY}
+            <a className="inquiry-channel" href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer">
+              <Music2 className="inquiry-channel-icon" size={21} /><span><strong>TikTok</strong><small>{en ? "Visit our profile" : "Отворете профила ни"}</small></span><ArrowUpRight size={16} />
+            </a>
+            <a className="inquiry-channel" href={socialLinks.facebook} target="_blank" rel="noopener noreferrer">
+              <Facebook className="inquiry-channel-icon" size={21} /><span><strong>Facebook</strong><small>{en ? "Message our page" : "Пишете на страницата ни"}</small></span><ArrowUpRight size={16} />
+            </a>
+            <a className="inquiry-channel" href={`tel:${CONTACT_PHONE_E164}`}>
+              <Phone className="inquiry-channel-icon" size={21} /><span><strong>{en ? "Call us" : "Обадете се"}</strong><small>{CONTACT_PHONE_DISPLAY}</small></span><ArrowUpRight size={16} />
+            </a>
+            <a className="inquiry-channel" href={`mailto:${COMPANY.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}>
+              <Mail className="inquiry-channel-icon" size={21} /><span><strong>{en ? "Send an email" : "Изпратете имейл"}</strong><small>{en ? "Send your inquiry" : "Изпратете запитване"}</small></span><ArrowUpRight size={16} />
             </a>
           </div>
-          {context?.name && (
-            <div className="public-inquiry-context">
-              <p>
-                {en
-                  ? "For a phone or social conversation, use these details:"
-                  : "За разговор по телефон или в социалните мрежи използвайте тези данни:"}
-              </p>
-              <textarea
-                aria-label={en ? "Inquiry details" : "Данни за запитването"}
-                readOnly
-                value={text}
-              />
-              <button className="public-text-link" onClick={copy}>
-                <Copy size={16} />
-                {copied
-                  ? en
-                    ? "Copied"
-                    : "Копирано"
-                  : en
-                    ? "Copy inquiry"
-                    : "Копирайте запитването"}
-              </button>
-              {copyError && (
-                <p role="alert">
-                  {en
-                    ? "Please select and copy the text above."
-                    : "Моля, маркирайте и копирайте текста по-горе."}
-                </p>
-              )}
-            </div>
-          )}
-          <div className="public-social-text">
-            <a
-              href={socialLinks.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Facebook
-            </a>
-            <a
-              href={socialLinks.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Instagram
-            </a>
-            <a
-              href={socialLinks.tiktok}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              TikTok
-            </a>
+          {context?.name && <details className="inquiry-context-details">
+            <summary>{en ? "Inquiry details for social messages" : "Данни за запитване в социалните мрежи"}</summary>
+            <p>{en ? "Copy these details into your message so we know which cat you are asking about." : "Копирайте тези данни в съобщението си, за да знаем за коя котка питате."}</p>
+            <textarea aria-label={en ? "Inquiry details" : "Данни за запитването"} readOnly value={text} />
+            <button className="inquiry-copy" onClick={copy}><Copy size={16} />{copied ? (en ? "Copied" : "Копирано") : (en ? "Copy inquiry" : "Копирайте запитването")}</button>
+            {copied && <span role="status" className="inquiry-copy-status">{en ? "Ready to paste into your message." : "Готово за поставяне в съобщението ви."}</span>}
+            {copyError && <p role="alert">{en ? "Please select and copy the text above." : "Моля, маркирайте и копирайте текста по-горе."}</p>}
+          </details>}
+          <div className="inquiry-waiting">
+            <span>{en ? "Planning ahead?" : "Планирате занапред?"}</span>
+            <Link to={waitingURL} onClick={() => onOpenChange(false)}>{en ? "Join the kitten waiting list" : "Запишете се в списъка за котенце"}<ArrowRight size={17} /></Link>
           </div>
-          <Link
-            className="public-text-link"
-            to={waitingURL}
-            onClick={() => onOpenChange(false)}
-          >
-            {en
-              ? "Join the kitten waiting list"
-              : "Запишете се в списъка за котенце"}
-            <ArrowRight size={17} />
-          </Link>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

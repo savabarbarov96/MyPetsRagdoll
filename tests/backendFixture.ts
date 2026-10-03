@@ -6,7 +6,7 @@ export const catId = 'jd700000000000000000000000000001';
 export const cats = [{_id:catId,_creationTime:1,name:'Test Ragdoll',subtitle:'Ragdoll',description:'A published cat profile for interface testing.',image:photo,gallery:[photo],age:'3 месеца',color:'Blue',status:'Достъпен',gender:'female',birthDate:'2026-07-01',isDisplayed:true,category:'kitten',breed:'ragdoll'}, {_id:'jd700000000000000000000000000002',_creationTime:2,name:'Test British',subtitle:'British',description:'Published British profile.',image:photo,gallery:[photo],age:'2 години',color:'Blue',status:'Достъпен',gender:'male',birthDate:'2024-07-01',isDisplayed:true,category:'adult',breed:'british'}];
 export async function backendFixture(context: BrowserContext) {
   // This protocol fixture NEVER connects to the customer deployment.
-  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,missingTracking:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
+  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,missingTracking:false,longCats:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
   await context.route('**/*', async route => {
     const url=new URL(route.request().url());
     if (url.hostname==='127.0.0.1' || url.hostname==='localhost') await route.continue();
@@ -21,7 +21,7 @@ export async function backendFixture(context: BrowserContext) {
       if(path==='auth:validateSession')return {isValid:typeof args.sessionId==='string'&&args.sessionId.startsWith('admin_'),expiresAt:Date.now()+86400000};
       if(path==='siteSettings:getPublicTrackingSettings')return [{key:'google_analytics_id',value:'"G-TEST123"'},{key:'meta_pixel_id',value:'"123456789"'}];
       if(path==='pedigree:getPublicParents')return {mother:null,father:null};
-      if(path.includes('cats:'))return path.includes('Statistics')?{totalCats:2,displayedCats:2,maleCats:1,femaleCats:1}:cats;
+      if(path.includes('cats:'))return path.includes('Statistics')?{totalCats:2,displayedCats:2,maleCats:1,femaleCats:1}:(state.longCats ? [cats[0],{...cats[0],_id:'jd700000000000000000000000000003',name:'A Longer Name for a Beautiful Ragdoll Kitten'},cats[1]] : cats);
       if(path==='waitingList:list'){
         const opts=args.paginationOpts as {cursor:string|null,numItems:number};
         const list=state.submissions.filter(r=>!args.status||r.status===args.status);const start=Number(opts.cursor||0);const end=start+opts.numItems;

@@ -10,11 +10,25 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Menu, X, ChevronDown, ArrowUpRight, ArrowRight } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  ArrowUpRight,
+  ArrowRight,
+  Phone,
+  Instagram,
+  MessageCircle,
+  Music2,
+  Facebook,
+} from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CONTACT_PHONE_E164, CONTACT_PHONE_DISPLAY } from "@/config/contact";
 import { SITE_URL, COMPANY } from "@/config/site";
-import { usePublicSocialLinks, usePublicLocation } from "@/hooks/usePublicContacts";
+import {
+  usePublicSocialLinks,
+  usePublicLocation,
+} from "@/hooks/usePublicContacts";
 import responsiveImages from "@/data/responsiveImages.json";
 import InquiryDialog from "./InquiryDialog";
 import "@/styles/public.css";
@@ -257,8 +271,19 @@ export function PublicLayout({ children }: { children?: ReactNode }) {
       </a>
       <header className="public-header">
         <div className="public-company-strip">
-          <span>{COMPANY.name}</span>
-          <a href={`tel:${CONTACT_PHONE_E164}`}>{CONTACT_PHONE_DISPLAY}</a>
+          <div className="public-company-inner public-container">
+            <Link className="public-company-name" to={url("/contact")}>
+              {COMPANY.name}
+              <ArrowUpRight size={13} aria-hidden="true" />
+            </Link>
+            <a
+              className="public-company-phone"
+              href={`tel:${CONTACT_PHONE_E164}`}
+            >
+              <Phone size={13} aria-hidden="true" />
+              {CONTACT_PHONE_DISPLAY}
+            </a>
+          </div>
         </div>
         <div className="public-header-main public-container">
           <Link
@@ -368,43 +393,43 @@ export function PublicLayout({ children }: { children?: ReactNode }) {
       <main id="main-content">{children ?? <Outlet />}</main>
       <footer className="public-footer" id="contact">
         <div className="public-container">
-          <div className="public-footer-top">
+          <div className="public-footer-invitation">
             <div>
+              <h2>
+                {text(
+                  "Нека намерим вашето котенце.",
+                  "Let’s find your kitten.",
+                )}
+              </h2>
+              <p>
+                {text(
+                  "Попитайте за котенце или предстоящо котило. Изберете удобен за вас начин да се свържете с нас.",
+                  "Ask about a kitten or an upcoming litter. Choose the contact channel that suits you.",
+                )}
+              </p>
+            </div>
+            <button className="public-button" onClick={() => setInquiry(true)}>
+              {text("Резервирай", "Reserve")}
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="public-footer-top">
+            <div className="public-footer-identity">
               <Link className="public-footer-brand" to={url("/")}>
                 BleuRoi
               </Link>
-              <p>
-                {text(
-                  "Малки лапички. Голямо място в сърцето.",
-                  "Little paws. A special place in your heart.",
-                )}
-              </p>
-              <div className="public-social-text">
-                <a
-                  href={socialLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Facebook ↗
-                </a>
-                <a
-                  href={socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Instagram ↗
-                </a>
-                <a
-                  href={socialLinks.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  TikTok ↗
-                </a>
-              </div>
+              <p>Ragdoll & British Longhair / Shorthair</p>
+              <p>{contactLocation.address}</p>
+              <a
+                className="public-footer-phone"
+                href={`tel:${CONTACT_PHONE_E164}`}
+              >
+                {CONTACT_PHONE_DISPLAY}
+              </a>
+              <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
             </div>
-            <div>
-              <h2>{text("Разгледайте", "Explore")}</h2>
+            <div className="public-footer-explore">
+              <h3>{text("Разгледайте", "Explore")}</h3>
               <Link to={url("/all-cats")}>
                 {text("Нашите котки", "Our cats")}
               </Link>
@@ -416,18 +441,45 @@ export function PublicLayout({ children }: { children?: ReactNode }) {
               <Link to={url("/waiting-list")}>
                 {text("Списък за котенце", "Waiting list")}
               </Link>
+              <Link to={url("/contact")}>{text("Контакти", "Contact")}</Link>
             </div>
-            <div>
-              <h2>{text("Свържете се с нас", "Get in touch")}</h2>
-              <a href={`tel:${CONTACT_PHONE_E164}`}>{CONTACT_PHONE_DISPLAY}</a>
-              <a href="mailto:asimgizem123@gmail.com">asimgizem123@gmail.com</a>
-              <p>{contactLocation.address}</p>
+            <div className="public-footer-channels">
+              <h3>{text("Пишете ни", "Message us")}</h3>
               <a
                 href="https://wa.me/359894474966"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                WhatsApp <ArrowUpRight size={14} />
+                <MessageCircle size={18} aria-hidden="true" />
+                <span>WhatsApp</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+              <a
+                href={socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram size={18} aria-hidden="true" />
+                <span>Instagram</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+              <a
+                href={socialLinks.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Music2 size={18} aria-hidden="true" />
+                <span>TikTok</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+              <a
+                href={socialLinks.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Facebook size={18} aria-hidden="true" />
+                <span>Facebook</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -436,7 +488,8 @@ export function PublicLayout({ children }: { children?: ReactNode }) {
               <strong>РЕД ХАВАЛЕ ЕООД</strong> · ЕИК 202955527 · МОЛ СААДЕТИН
               ХАВАЛЕ
             </p>
-            <p>{COMPANY.address}</p><p>ragdollbleuroi.eu</p>
+            <p>{COMPANY.address}</p>
+            <p>ragdollbleuroi.eu</p>
           </div>
           <div className="public-footer-bottom">
             <span>© {new Date().getFullYear()} BleuRoi</span>

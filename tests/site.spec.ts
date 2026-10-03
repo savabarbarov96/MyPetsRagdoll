@@ -76,3 +76,26 @@ test('missing optional tracking function keeps the public site usable after acce
  expect(state.externalRequests.some(url=>/googletagmanager|facebook.net/.test(url))).toBeFalsy();
  await page.goto('/contact');await expect(page.locator('h1').first()).toBeVisible();
 });
+
+test('reservation channels are visible and cat actions align with different name lengths',async({page,context})=>{
+ const state=await backendFixture(context);state.longCats=true;await page.goto('/all-cats');
+ await page.getByRole('button',{name:'Отказвам незадължителните',exact:true}).click();
+ const actions=page.locator('#kittens .public-cat-card').getByRole('button',{name:'Резервирай',exact:true});
+ await expect(actions).toHaveCount(2);
+ await page.evaluate(()=>document.fonts.ready);
+ const positions=await actions.evaluateAll(elements=>elements.slice(0,2).map(element=>element.getBoundingClientRect().bottom));
+ expect(Math.abs(positions[0]-positions[1])).toBeLessThanOrEqual(2);
+ await actions.first().click();const dialog=page.getByRole('dialog');await expect(dialog).toContainText('Test Ragdoll');
+ const instagram=dialog.getByRole('link',{name:/Instagram/});const tiktok=dialog.getByRole('link',{name:/TikTok/});
+ await expect(instagram).toBeVisible();await expect(instagram).toHaveAttribute('href','https://www.instagram.com/bleuroi_cattery_ragdol_british/');
+ await expect(tiktok).toBeVisible();await expect(tiktok).toHaveAttribute('href','https://www.tiktok.com/@blueroi.ragdol.british');
+ const bounds=await dialog.boundingBox();expect(bounds?.height).toBeLessThanOrEqual(page.viewportSize()!.height-16);
+ expect(await dialog.evaluate(element=>element.scrollWidth<=element.clientWidth+1)).toBeTruthy();
+ await dialog.locator('summary').click();await expect(dialog.getByLabel('Данни за запитването')).toHaveValue(new RegExp(`/cat/${catId}`));
+ await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);await expect(actions.first()).toBeFocused();
+ await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+ expect((await page.locator('header').boundingBox())?.y).toBeGreaterThanOrEqual(-1);
+ expect((await page.locator('header').boundingBox())?.y).toBeLessThanOrEqual(1);
+ await expect(page.locator('footer').getByRole('link',{name:/Instagram/i}).first()).toBeVisible();
+ await expect(page.locator('footer').getByRole('link',{name:/TikTok/i}).first()).toBeVisible();
+});
