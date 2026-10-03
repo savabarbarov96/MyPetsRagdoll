@@ -17,11 +17,11 @@ node scripts/configure-admin-secret.mjs wandering-bobcat-37
 
 The helper hides input, requires matching passwords of at least 12 characters, and sends only a salted hash to the backend. No email or automatic messages are configured.
 
-Review the production target and planned additive schema/function changes before deployment:
+The website currently uses a deployment classified as `dev` by Convex. The project's default `prod` is `doting-orca-824`, which is a different backend. Plain `convex deploy` would target that other backend. The helper below instead creates a temporary key scoped to the verified live deployment, keeps it in process memory, and revokes it after use. Review the planned additive schema/function changes before deployment:
 
 ```bash
-CONVEX_DEPLOYMENT=prod:wandering-bobcat-37 npx convex deploy --dry-run --typecheck enable
-CONVEX_DEPLOYMENT=prod:wandering-bobcat-37 npx convex deploy --typecheck enable
+node scripts/deploy-active-backend.mjs --dry-run
+node scripts/deploy-active-backend.mjs
 ```
 
 Deploy adds the waiting-list tables and indexes and secures existing administrator APIs. Do not run seed, reset, import or sample-data commands. Existing admin sessions are intentionally invalidated; the owner signs in again with the new password. Coordinate the backend and frontend rollout because the old frontend cannot use the newly protected admin APIs.
