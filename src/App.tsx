@@ -9,6 +9,7 @@ import { PublicLayout } from '@/components/site/PublicLayout';
 import { HomePage, BritishPage, AllCatsPage, AboutPage, NewsPage, NewsArticlePage, CatPage, PublicNotFoundPage } from '@/pages/PublicPages';
 import { TrustPage, ContactPage, WaitingListPage, TermsPage, PrivacyPage } from '@/pages/InformationPages';
 import Analytics from '@/components/Analytics';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import VisitorTracker from '@/components/VisitorTracker';
 import '@/styles/public.css';
 
@@ -21,8 +22,10 @@ function AppContent() {
   return <>
     <Helmet htmlAttributes={{ lang: language, class: isAdmin ? 'light' : 'light public-theme' }} />
     <Toaster /><Sonner />
-    {!isAdmin && (consent.analytics || consent.marketing) && <Analytics />}
-    {!isAdmin && consent.analytics && <VisitorTracker />}
+    {!isAdmin && (consent.analytics || consent.marketing) && <ErrorBoundary fallback={<></>}>
+      <Analytics />
+      {consent.analytics && <VisitorTracker />}
+    </ErrorBoundary>}
     <Suspense fallback={<div className="p-8" role="status">{language === 'bg' ? 'Зареждане…' : 'Loading…'}</div>}>
       <Routes>
         <Route path="/admin" element={<><Helmet><meta name="robots" content="noindex,nofollow" /></Helmet><Admin /></>} />

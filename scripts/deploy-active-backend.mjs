@@ -4,12 +4,14 @@ import { spawnSync } from 'node:child_process';
 const deployment = 'wandering-bobcat-37';
 const cli = './node_modules/.bin/convex';
 const dryRun = process.argv.includes('--dry-run');
-if (process.argv.slice(2).some(arg => arg !== '--dry-run')) throw new Error('Only --dry-run is supported.');
+const allowUnconfiguredAdmin = process.argv.includes('--allow-unconfigured-admin');
+if (process.argv.slice(2).some(arg => !['--dry-run', '--allow-unconfigured-admin'].includes(arg))) throw new Error('Unsupported rollout option.');
 const run = (args, options = {}) => spawnSync(cli, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, ...options });
 if (!dryRun) {
   const secret = run(['env', 'get', 'ADMIN_PASSWORD_HASH', '--deployment', deployment]);
   if (secret.status !== 0 || !/^scrypt:[a-f0-9]{32}:[a-f0-9]{128}$/.test(secret.stdout.trim())) {
-    throw new Error('Configure the server admin password with configure-admin-secret.mjs before deployment.');
+    if (!allowUnconfiguredAdmin) throw new Error('Configure the server admin password with configure-admin-secret.mjs before deployment.');
+    console.warn('Public backend recovery: admin login remains disabled until ADMIN_PASSWORD_HASH is configured.');
   }
 }
 const name = `bleuroi-rollout-${Date.now()}`;

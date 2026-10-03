@@ -12,6 +12,7 @@ test('all public page types render without overflow and preserve legal identity'
 });
 test('reservation context survives WhatsApp and waiting-list navigation',async({page,context})=>{
  const state=await backendFixture(context);await page.goto(`/cat/${catId}`);
+ await page.getByRole('button',{name:'Отказвам незадължителните',exact:true}).click();
  await page.getByRole('button',{name:'Резервирай',exact:true}).last().click();
  const dialog=page.getByRole('dialog');await expect(dialog).toContainText('Test Ragdoll');
  const whatsapp=await dialog.getByRole('link',{name:/WhatsApp/}).getAttribute('href');expect(whatsapp).toContain('359894474966');expect(decodeURIComponent(whatsapp||'')).toContain(`/cat/${catId}`);
@@ -23,6 +24,7 @@ test('reservation context survives WhatsApp and waiting-list navigation',async({
 });
 test('waiting-list requires explicit consent and retains data after backend rejection',async({page,context})=>{
  const state=await backendFixture(context);state.failSubmission=true;await page.goto('/waiting-list');
+ await page.getByRole('button',{name:'Отказвам незадължителните',exact:true}).click();
  await page.locator('#wait-phone').fill('0894474966');await page.getByRole('button',{name:'Запишете се в списъка',exact:true}).click();
  await expect(page.getByRole('alert')).toContainText('изрично');expect(state.mutations).toHaveLength(0);
  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Запишете се в списъка',exact:true}).click();
@@ -63,4 +65,14 @@ test('admin validates login and manages waiting-list pagination notes status and
  const record=state.submissions.find(r=>r.notes==='Follow-up discussed.');expect(record?.status).toBe('contacted');
  await page.getByRole('button',{name:'Изтрий заявката'}).click();await page.getByRole('button',{name:'Отказ',exact:true}).click();expect(state.submissions).toHaveLength(21);
  await page.getByRole('button',{name:'Изтрий заявката'}).click();await page.getByRole('button',{name:'Потвърди изтриването'}).click();await expect.poll(()=>state.submissions.length).toBe(20);
+});
+
+test('missing optional tracking function keeps the public site usable after accepting cookies',async({page,context})=>{
+ const state=await backendFixture(context);state.missingTracking=true;await page.goto('/');
+ await page.getByRole('button',{name:'Приемам незадължителните',exact:true}).click();
+ await expect(page.locator('header')).toContainText('РЕД ХАВАЛЕ ЕООД');
+ await expect(page.locator('h1').first()).toBeVisible();
+ await expect(page.getByText('Възникна грешка',{exact:true})).toHaveCount(0);
+ expect(state.externalRequests.some(url=>/googletagmanager|facebook.net/.test(url))).toBeFalsy();
+ await page.goto('/contact');await expect(page.locator('h1').first()).toBeVisible();
 });

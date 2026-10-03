@@ -6,7 +6,7 @@ export const catId = 'jd700000000000000000000000000001';
 export const cats = [{_id:catId,_creationTime:1,name:'Test Ragdoll',subtitle:'Ragdoll',description:'A published cat profile for interface testing.',image:photo,gallery:[photo],age:'3 месеца',color:'Blue',status:'Достъпен',gender:'female',birthDate:'2026-07-01',isDisplayed:true,category:'kitten',breed:'ragdoll'}, {_id:'jd700000000000000000000000000002',_creationTime:2,name:'Test British',subtitle:'British',description:'Published British profile.',image:photo,gallery:[photo],age:'2 години',color:'Blue',status:'Достъпен',gender:'male',birthDate:'2024-07-01',isDisplayed:true,category:'adult',breed:'british'}];
 export async function backendFixture(context: BrowserContext) {
   // This protocol fixture NEVER connects to the customer deployment.
-  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
+  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,missingTracking:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
   await context.route('**/*', async route => {
     const url=new URL(route.request().url());
     if (url.hostname==='127.0.0.1' || url.hostname==='localhost') await route.continue();
@@ -34,7 +34,7 @@ export async function backendFixture(context: BrowserContext) {
     };
     const transition=(newQuerySet=querySet)=>{
       const startVersion=version();tick++;querySet=newQuerySet;
-      socket.send(JSON.stringify({type:'Transition',startVersion,endVersion:version(),modifications:[...queries].map(([queryId,q])=>({type:'QueryUpdated',queryId,value:result(q.path,q.args),logLines:[],journal:null}))}));
+      socket.send(JSON.stringify({type:'Transition',startVersion,endVersion:version(),modifications:[...queries].map(([queryId,q])=>(state.missingTracking && q.path==='siteSettings:getPublicTrackingSettings' ? {type:'QueryFailed',queryId,errorMessage:"Could not find public function for 'siteSettings:getPublicTrackingSettings'.",errorData:null,logLines:[],journal:null} : {type:'QueryUpdated',queryId,value:result(q.path,q.args),logLines:[],journal:null}))}));
     };
     socket.onMessage(raw=>{
       const message=JSON.parse(String(raw));
