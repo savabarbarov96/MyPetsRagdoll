@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 
 interface AdminAuthContextType {
@@ -18,12 +19,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem(SESSION_KEY);
     return token?.startsWith("admin_") ? token : null;
   });
-  const [loggingIn, setLoggingIn] = useState(false);
   const loginAction = useAction(api.adminLogin.login);
   const logoutMutation = useMutation(api.auth.logout);
   const validation = useQuery(api.auth.validateSession, sessionId ? { sessionId } : "skip");
   const isAuthenticated = Boolean(sessionId && validation?.isValid);
-  const isLoading = loggingIn || Boolean(sessionId && validation === undefined);
+  // The login form owns submission state so it stays mounted and retains errors.
+  const isLoading = Boolean(sessionId && validation === undefined);
 
   useEffect(() => {
     localStorage.removeItem("simpleAdminAuth");
@@ -44,16 +45,14 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, [validation]);
 
   async function login(password: string) {
-    setLoggingIn(true);
     try {
       const result = await loginAction({ password });
       localStorage.setItem(SESSION_KEY, result.sessionId);
       setSessionId(result.sessionId);
       return true;
-    } catch {
-      return false;
-    } finally {
-      setLoggingIn(false);
+    } catch (error) {
+      if (error instanceof ConvexError && error.data === "Invalid login") return false;
+      throw error;
     }
   }
 

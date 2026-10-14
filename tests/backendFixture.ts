@@ -6,7 +6,7 @@ export const catId = 'jd700000000000000000000000000001';
 export const cats = [{_id:catId,_creationTime:1,name:'Test Ragdoll',subtitle:'Ragdoll',description:'A published cat profile for interface testing.',image:photo,gallery:[photo],age:'3 месеца',color:'Blue',status:'Достъпен',gender:'female',birthDate:'2026-07-01',isDisplayed:true,category:'kitten',breed:'ragdoll'}, {_id:'jd700000000000000000000000000002',_creationTime:2,name:'Test British',subtitle:'British',description:'Published British profile.',image:photo,gallery:[photo],age:'2 години',color:'Blue',status:'Достъпен',gender:'male',birthDate:'2024-07-01',isDisplayed:true,category:'adult',breed:'british'}];
 export async function backendFixture(context: BrowserContext) {
   // This protocol fixture NEVER connects to the customer deployment.
-  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,missingTracking:false,longCats:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
+  const state = {submissions:Array.from({length:21},(_,i)=>({_id:`wait_${i}`,_creationTime:Date.now()-i*1000,email:`person${i}@example.test`,name:`Person ${i}`,normalizedEmail:`person${i}@example.test`,status:'new',notes:'',preferences:'Ragdoll',followUpConsent:true,noticeVersion:'2026-10-02',consentedAt:Date.now(),updatedAt:Date.now()})),failSubmission:false,loginError:null as string|null,missingTracking:false,longCats:false,mutations:[] as {path:string,args:Record<string,unknown>}[],externalRequests:[] as string[]};
   await context.route('**/*', async route => {
     const url=new URL(route.request().url());
     if (url.hostname==='127.0.0.1' || url.hostname==='localhost') await route.continue();
@@ -43,8 +43,8 @@ export async function backendFixture(context: BrowserContext) {
         transition(message.newVersion);
       } else if(message.type==='Mutation'||message.type==='Action'){
         const path=message.udfPath;const args=message.args[0]||{};state.mutations.push({path,args});
-        const fail=path==='waitingList:submit'&&state.failSubmission || path==='adminLogin:login'&&args.password!=='interface-test-password';
-        if(fail){socket.send(JSON.stringify({type:`${message.type}Response`,requestId:message.requestId,success:false,result:'Test backend rejection',logLines:[]}));return;}
+        const fail=path==='waitingList:submit'&&state.failSubmission || path==='adminLogin:login'&&(Boolean(state.loginError)||args.password!=='interface-test-password');
+        if(fail){socket.send(JSON.stringify({type:`${message.type}Response`,requestId:message.requestId,success:false,result:'Test backend rejection',...(path==='adminLogin:login'?{errorData:state.loginError||'Invalid login'}:{}),logLines:[]}));return;}
         let value:unknown=null;
         if(path==='adminLogin:login')value={success:true,sessionId:'admin_'+'a'.repeat(64),expiresAt:Date.now()+86400000};
         if(path==='waitingList:submit'){

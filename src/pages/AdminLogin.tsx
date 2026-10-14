@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConvexError } from 'convex/values';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,8 +23,12 @@ const AdminLogin = () => {
         setPassword('');
       }
     } catch (error) {
-      setError('Грешка при влизане. Опитайте отново.');
-      console.error('Login error:', error);
+      const reason = error instanceof ConvexError ? error.data : null;
+      setError(reason === 'Admin login is not configured'
+        ? 'Входът за администратор не е настроен. Свържете се с поддръжката.'
+        : reason === 'Too many login attempts. Try again later.'
+          ? 'Твърде много опити за вход. Опитайте отново след 15 минути.'
+          : 'Грешка при влизане. Опитайте отново.');
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +60,7 @@ const AdminLogin = () => {
                 disabled={isSubmitting}
               />
               {error && (
-                <p className="text-red-600 text-sm">{error}</p>
+                <p role="alert" className="text-red-600 text-sm">{error}</p>
               )}
             </div>
             <Button 

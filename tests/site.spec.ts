@@ -53,9 +53,19 @@ test('language switch preserves cat route; navigation opens and closes accessibl
   await page.getByRole('button',{name:'Open menu',exact:true}).click();await page.locator('#public-mobile-menu summary').first().click();await expect(page.locator('#public-mobile-menu').getByRole('link',{name:'All cats',exact:true})).toBeVisible();
  }
 });
+test('admin shows configuration and throttling errors and allows retry',async({page,context})=>{
+ const state=await backendFixture(context);await page.goto('/admin');
+ for(const [reason,message] of [['Admin login is not configured','не е настроен'],['Too many login attempts. Try again later.','Твърде много опити']]){
+  state.loginError=reason;
+  await page.getByLabel(/Парола/).fill('interface-test-password');await page.getByRole('button',{name:'Влез',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText(message);
+  await expect(page.getByRole('button',{name:'Влез',exact:true})).toBeEnabled();
+ }
+ state.loginError=null;await page.getByRole('button',{name:'Влез',exact:true}).click();await expect(page.getByText('Admin Dashboard',{exact:true})).toBeVisible();
+});
 test('admin validates login and manages waiting-list pagination notes status and confirmed deletion',async({page,context})=>{
  const state=await backendFixture(context);await page.goto('/admin');
- await page.getByLabel(/Парола/).fill('wrong-test-password');await page.getByRole('button',{name:/Влез/}).click();await expect(page.getByLabel(/Парола/)).toBeVisible();
+ await page.getByLabel(/Парола/).fill('wrong-test-password');await page.getByRole('button',{name:/Влез/}).click();await expect(page.getByRole('alert')).toContainText('Неправилна парола');await expect(page.getByLabel(/Парола/)).toBeVisible();
  await page.getByLabel(/Парола/).fill('interface-test-password');await page.getByRole('button',{name:/Влез/}).click();
  const tab=page.getByRole('button',{name:/Чакащи за котенце/});
  if(!await tab.isVisible())await page.getByRole('button',{name:'Toggle menu',exact:true}).click();await tab.click();
